@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sisteme de ecuații liniare — Gauss & Cramer</title>
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#1b2130; --muted:#5d6678; --line:#dde2ec;
+  --accent:#2f5bea; --accent-soft:#e7edff; --ok:#0e9f6e; --ok-soft:#dcfce9; --warn:#c2410c; --warn-soft:#fff1e6;
+  --bad:#dc2626; --bad-soft:#fde8e8; --piv:#fde68a; --reg:#e6efff; --tgt:#c9f5dd; --swp:#ece6ff; --zero:#eef0f4;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(20,30,60,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1320; --panel:#171c2b; --ink:#e6e9f2; --muted:#9aa3b8; --line:#2a3145;
+    --accent:#7b9bff; --accent-soft:#1f2a4d; --ok:#34d399; --ok-soft:#113326; --warn:#fb923c; --warn-soft:#3a2414;
+    --bad:#f87171; --bad-soft:#3b1717; --piv:#6b5512; --reg:#1c2747; --tgt:#14432e; --swp:#2d2452; --zero:#1d2232;
+    --code-bg:#0a0e19; --code-ink:#dbe4f3; --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--accent)}
+#progress{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--ok));width:0;z-index:50}
+header.hero{background:linear-gradient(135deg,#1e3a8a,#2f5bea 55%,#0e9f6e);color:#fff;padding:48px 20px 40px}
+.hero .in{max-width:1180px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,4vw,42px);line-height:1.15}
+.hero p{margin:0;opacity:.92;max-width:760px}
+.hero .tags{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.hero .tags span{background:rgba(255,255,255,.16);padding:4px 12px;border-radius:999px;font-size:14px}
+.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;padding:24px 16px 80px}
+nav.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);font-size:14px}
+nav.toc b{display:block;margin:10px 0 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+nav.toc a{display:block;padding:3px 8px;border-radius:6px;text-decoration:none;color:var(--ink)}
+nav.toc a:hover,nav.toc a.active{background:var(--accent-soft);color:var(--accent)}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px clamp(16px,3vw,32px);margin-bottom:24px;box-shadow:var(--shadow)}
+section>h2{margin-top:0;font-size:clamp(22px,2.6vw,28px);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h3{margin-top:28px;font-size:20px}
+h4{margin:20px 0 6px;font-size:17px}
+.part{margin:40px 0 16px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:12px}
+.part::after{content:"";flex:1;height:1px;background:var(--line)}
+.lvl{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.l1{background:var(--ok-soft);color:var(--ok)} .l2{background:var(--accent-soft);color:var(--accent)} .l3{background:var(--warn-soft);color:var(--warn)}
+.box{border-radius:10px;padding:14px 16px;margin:16px 0;border-left:4px solid}
+.def{background:var(--accent-soft);border-color:var(--accent)}
+.prop{background:var(--ok-soft);border-color:var(--ok)}
+.warnb{background:var(--warn-soft);border-color:var(--warn)}
+.idea{background:var(--zero);border-color:var(--muted)}
+.box>strong:first-child{display:block;margin-bottom:4px}
+.f{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.07em;white-space:nowrap}
+.F{display:block;text-align:center;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.18em;margin:12px 0;overflow-x:auto;padding:4px 0}
+.f i,.F i{font-style:italic}
+.ss{display:inline-flex;flex-direction:column;vertical-align:middle;font-size:.7em;line-height:1.05;margin-left:1px}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.88em;line-height:1.15;margin:0 2px}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 2px}
+.fr>span{padding:0 2px}
+sub,sup{font-size:.7em}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--panel)}
+table.data{border-collapse:collapse;width:100%;font-size:15px;margin:12px 0}
+table.data th,table.data td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+table.data th{background:var(--zero)}
+.scroll{overflow-x:auto}
+/* matrices */
+.mxwrap{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;vertical-align:middle;margin:6px 0}
+table.mx{border-collapse:separate;border-spacing:3px;position:relative;margin:6px 4px;font-family:"Cambria Math","Times New Roman",serif}
+table.mx{border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px;padding:2px 6px}
+table.mx td,table.mx th{min-width:44px;text-align:center;padding:5px 7px;border-radius:6px;transition:background .35s}
+table.mx th{font-weight:400;color:var(--muted);font-size:13px}
+table.mx td.sep,table.mx th.sep{border-left:2px dashed var(--muted)}
+table.mx td.rl,table.mx th.rl{color:var(--muted);font-size:13px;min-width:28px}
+td.reg{background:var(--reg)} td.prow{outline:2px solid var(--accent);outline-offset:-2px}
+td.pv{background:var(--piv)!important;font-weight:700} td.tg{background:var(--tgt)!important} td.sw{background:var(--swp)!important}
+td.z{color:var(--muted);background:var(--zero)} td.nz{background:var(--accent-soft)} td.dg{background:var(--piv)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
+/* controls */
+.lab{border:2px solid var(--accent-soft);border-radius:12px;padding:16px;margin:18px 0;background:var(--panel)}
+.lab>.lt{font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.ctr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+label.c{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+select,input[type=text],input[type=number]{font:inherit;font-size:15px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+button{font:inherit;font-size:14px;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.pri:hover{filter:brightness(1.08);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+.ingrid{display:inline-grid;gap:4px;padding:8px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px;margin:8px 0}
+.ingrid input{width:62px;text-align:center;padding:5px}
+.ingrid .hd{font-size:12px;color:var(--muted);text-align:center}
+.ingrid input.bcol{background:var(--accent-soft)}
+.out{background:var(--zero);border-radius:8px;padding:10px 14px;margin:10px 0}
+.msg-ok{color:var(--ok);font-weight:600} .msg-bad{color:var(--bad);font-weight:600}
+.stepper{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;margin-top:12px}
+@media (max-width:760px){.stepper{grid-template-columns:1fr}}
+.stepbox{border:1px solid var(--line);border-radius:10px;padding:14px;min-height:220px}
+.steptitle{font-weight:700;font-size:17px;margin-bottom:6px}
+.stepdesc{color:var(--ink);margin-bottom:8px}
+.steplist{border:1px solid var(--line);border-radius:10px;padding:8px;max-height:460px;overflow:auto;font-size:13px}
+.steplist ol{margin:0;padding-left:22px}
+.steplist li{cursor:pointer;padding:2px 4px;border-radius:5px}
+.steplist li.cur{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-family:"Cambria Math","Times New Roman",serif}
+.chip.known{background:var(--ok-soft);border-color:var(--ok)}
+.bar{height:6px;background:var(--zero);border-radius:4px;overflow:hidden;margin:6px 0 10px}
+.bar>div{height:100%;background:var(--accent);width:0;transition:width .3s}
+canvas{max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:block}
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px;border-radius:10px;overflow:auto;font-size:13.5px;line-height:1.5;position:relative}
+code{font-family:Consolas,"JetBrains Mono",Menlo,monospace}
+:not(pre)>code{background:var(--zero);padding:1px 5px;border-radius:4px;font-size:.92em}
+.copy{position:absolute;top:8px;right:8px;font-size:12px;padding:3px 9px;background:#1e293b;color:#e2e8f0;border-color:#334155}
+textarea.code{width:100%;min-height:340px;font:13.5px/1.5 Consolas,Menlo,monospace;background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:12px;border:1px solid var(--line);tab-size:2}
+.console{background:#020617;color:#a7f3d0;font:13px/1.5 Consolas,Menlo,monospace;padding:12px;border-radius:10px;min-height:80px;white-space:pre-wrap;max-height:360px;overflow:auto}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--panel)}
+details summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details[open] summary{margin-bottom:8px}
+.ex{border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.ex .eh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.ex .eh b{font-size:16px}
+.quiz .q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.quiz .q label{display:block;padding:4px 8px;border-radius:6px;cursor:pointer}
+.quiz .q label:hover{background:var(--zero)}
+.quiz .q.right{border-color:var(--ok);background:var(--ok-soft)}
+.quiz .q.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz .fb{font-size:14px;margin-top:6px;display:none}
+.obj{list-style:none;padding:0;margin:0}
+.obj li{padding:8px 0 8px 34px;position:relative;border-bottom:1px dashed var(--line)}
+.obj li::before{content:attr(data-n);position:absolute;left:0;top:8px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.sys{font-family:"Cambria Math","Times New Roman",serif;font-size:1.1em;border-left:3px solid var(--accent);padding:4px 14px;margin:10px 0;display:inline-block}
+.sys div{white-space:nowrap}
+.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:13px}
+.svgw{overflow-x:auto}
+.svgw svg{max-width:100%;height:auto}
+.svgw svg text{fill:var(--ink);font-family:inherit}
+.small{font-size:14px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:14px;padding:20px}
+@media print{nav.toc,#progress,.lab button{display:none}.layout{grid-template-columns:1fr}section{break-inside:avoid-page;box-shadow:none}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<header class="hero"><div class="in">
+  <h1>Rezolvarea sistemelor de ecuații liniare</h1>
+  <p>Metoda eliminării Gauss, metoda Cramer, calculul determinanților și complexitatea algoritmilor. Curs, seminar și laborator, cu simulatoare interactive, de la primii pași până la nivel avansat.</p>
+  <div class="tags"><span>Curs 6 · Capitolul 4</span><span>Metode numerice</span><span>Nivel: începător → avansat</span><span>Interactiv</span></div>
+</div></header>
+
+<div class="layout">
+<nav class="toc" id="toc">
+  <b>Start</b>
+  <a href="#obiective">Obiective și traseu</a>
+  <a href="#cum">Cum folosești materialul</a>
+  <b>Curs</b>
+  <a href="#c1">1. Ce este un sistem liniar</a>
+  <a href="#c2">2. Metode directe vs. iterative</a>
+  <a href="#c3">3. Matrice triunghiulare și diagonale</a>
+  <a href="#c4">4. Transformări elementare</a>
+  <a href="#c5">5. Substituția inversă</a>
+  <a href="#c6">6. Metoda eliminării Gauss</a>
+  <a href="#c7">7. Simulator Gauss pas cu pas</a>
+  <a href="#c8">8. Pivot nul și pivotare</a>
+  <a href="#c9">9. Determinanți prin eliminare</a>
+  <a href="#c10">10. Metoda Cramer</a>
+  <a href="#c11">11. Complexitate O(n³)</a>
+  <a href="#c12">12. Erori de rotunjire</a>
+  <a href="#c13">13. Sisteme singulare</a>
+  <a href="#c14">14. Avansat: Gauss-Jordan, LU</a>
+  <b>Seminar</b>
+  <a href="#s1">Exerciții rezolvate</a>
+  <a href="#s2">Exerciții propuse</a>
+  <b>Laborator</b>
+  <a href="#l1">Pseudocod</a>
+  <a href="#l2">Mediu de programare JS</a>
+  <a href="#l3">Cod Python și C++</a>
+  <a href="#l4">Teme de laborator</a>
+  <a href="#l5">Experiment Hilbert</a>
+  <b>Final</b>
+  <a href="#quiz">Test de autoevaluare</a>
+  <a href="#fisa">Fișă de sinteză</a>
+</nav>
+
+<main>
+
+<!-- ===================== START ===================== -->
+<section id="obiective">
+  <h2>Obiectivele unității de învățare</h2>
+  <p>După parcurgerea acestui material vei putea:</p>
+  <ul class="obj">
+    <li data-n="O1">să explici diferența dintre <b>metodele directe (exacte)</b> și <b>metodele indirecte (iterative)</b> și tipurile de erori care apar în fiecare (rotunjire, trunchiere);</li>
+    <li data-n="O2">să recunoști matricele <b>inferior triunghiulare, superior triunghiulare și diagonale</b> și să folosești proprietățile lor (Propoziția 1);</li>
+    <li data-n="O3">să aplici cele trei <b>transformări elementare</b> și să justifici de ce ele nu schimbă mulțimea soluțiilor;</li>
+    <li data-n="O4">să rezolvi un sistem prin <b>metoda eliminării Gauss</b> (faza de eliminare cu formulele pentru linia pivot și liniile nepivot + substituția inversă);</li>
+    <li data-n="O5">să calculezi <b>determinantul</b> unei matrice ca produs al pivoților;</li>
+    <li data-n="O6">să aplici <b>metoda Cramer</b> și să explici de ce este nepractică pentru sisteme mari;</li>
+    <li data-n="O7">să justifici că eliminarea Gauss are <b>complexitatea O(n³)</b> și să numeri exact operațiile;</li>
+    <li data-n="O8">să <b>implementezi</b> algoritmii, să tratezi pivotul nul, sistemele singulare și efectele erorilor de rotunjire.</li>
+  </ul>
+  <h3>Traseul recomandat</h3>
+  <div class="svgw"><svg viewBox="0 0 900 130" role="img" aria-label="Traseul de învățare">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#7a849a"/></marker></defs>
+    <g font-size="13">
+      <rect x="5" y="30" width="150" height="70" rx="12" fill="#0e9f6e" opacity=".15" stroke="#0e9f6e"/><text x="80" y="58" text-anchor="middle" font-weight="700">Nivel 1</text><text x="80" y="78" text-anchor="middle">Noțiuni, 2×2, 3×3</text>
+      <line x1="158" y1="65" x2="218" y2="65" stroke="#7a849a" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="222" y="30" width="190" height="70" rx="12" fill="#2f5bea" opacity=".15" stroke="#2f5bea"/><text x="317" y="58" text-anchor="middle" font-weight="700">Nivel 2</text><text x="317" y="78" text-anchor="middle">Algoritmul general, pivot</text>
+      <line x1="415" y1="65" x2="475" y2="65" stroke="#7a849a" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="479" y="30" width="190" height="70" rx="12" fill="#c2410c" opacity=".15" stroke="#c2410c"/><text x="574" y="58" text-anchor="middle" font-weight="700">Nivel 3</text><text x="574" y="78" text-anchor="middle">Complexitate, erori, cod</text>
+      <line x1="672" y1="65" x2="732" y2="65" stroke="#7a849a" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="736" y="30" width="155" height="70" rx="12" fill="#7c3aed" opacity=".15" stroke="#7c3aed"/><text x="813" y="58" text-anchor="middle" font-weight="700">Evaluare</text><text x="813" y="78" text-anchor="middle">Seminar, lab, test</text>
+    </g></svg></div>
+</section>
+
+<section id="cum">
+  <h2>Cum folosești materialul</h2>
+  <div class="grid2">
+    <div class="card"><b>Etichete de nivel</b><p class="small" style="margin:6px 0 0"><span class="lvl l1">Nivel 1</span> începător · <span class="lvl l2">Nivel 2</span> intermediar · <span class="lvl l3">Nivel 3</span> avansat. Dacă ești la început, parcurge întâi tot ce e verde.</p></div>
+    <div class="card"><b>Laboratoare interactive</b><p class="small" style="margin:6px 0 0">Casetele cu chenar albastru sunt <b>interactive</b>: modifici numere, apeși butoane și vezi imediat efectul. Nu poți „strica” nimic.</p></div>
+    <div class="card"><b>Fracții exacte</b><p class="small" style="margin:6px 0 0">Simulatoarele calculează implicit cu <b>fracții exacte</b> (ex. 1/3, nu 0.3333), ca să poți compara direct cu calculul de pe hârtie. Poți comuta și pe zecimale (virgulă mobilă).</p></div>
+    <div class="card"><b>Notații</b><p class="small" style="margin:6px 0 0">Notăm liniile cu L<sub>1</sub>, L<sub>2</sub>, … Indicele superior <span class="f">a_{ij}^{(k)}</span> arată valoarea elementului <b>după pasul k</b>; <span class="f">a_{ij}^{(0)}</span> = valoarea inițială.</p></div>
+  </div>
+</section>
+
+<div class="part">Partea I · Curs</div>
+
+<!-- ===================== C1 ===================== -->
+<section id="c1">
+  <h2>1. Ce este un sistem de ecuații liniare <span class="lvl l1">Nivel 1</span></h2>
+  <p>O ecuație este <b>liniară</b> dacă necunoscutele apar doar la puterea 1, înmulțite cu constante și adunate: <span class="f">2x_1 + 3x_2 - x_3 = 5</span> este liniară; <span class="f">x_1 x_2 = 4</span> sau <span class="f">x_1^2 = 9</span> nu sunt.</p>
+  <p>Un <b>sistem liniar</b> cu <i>m</i> ecuații și <i>n</i> necunoscute are forma generală (1):</p>
+  <div class="F">a_{11}x_1 + a_{12}x_2 + ... + a_{1n}x_n = b_1</div>
+  <div class="F" style="margin-top:-8px">a_{21}x_1 + a_{22}x_2 + ... + a_{2n}x_n = b_2</div>
+  <div class="F" style="margin-top:-8px">. . . . . . . . . . . . . . . . . . . . . .</div>
+  <div class="F" style="margin-top:-8px">a_{m1}x_1 + a_{m2}x_2 + ... + a_{mn}x_n = b_m</div>
+  <p>Scris compact, <b>matriceal</b>: <span class="f">A \cdot X = B</span>, unde</p>
+  <ul>
+    <li><span class="f">A = (a_{ij})</span> este <b>matricea sistemului</b> (coeficienții), <span class="f">A \in M_{m,n}(R)</span>;</li>
+    <li><span class="f">X</span> este vectorul (coloana) necunoscutelor, <span class="f">X \in M_{n,1}(R)</span>;</li>
+    <li><span class="f">B</span> este vectorul termenilor liberi, <span class="f">B \in M_{m,1}(R)</span>.</li>
+  </ul>
+  <p>În acest capitol ne ocupăm în principal de cazul <b>pătratic</b> <span class="f">m = n</span>, cu <span class="f">\det A \ne 0</span> (soluție unică).</p>
+  <div class="box idea"><strong>Exemplu concret: de la poveste la sistem</strong>
+    Un magazin vinde caiete (<i>x</i>) și pixuri (<i>y</i>). 2 caiete și 3 pixuri costă 8 lei; un caiet costă cu 1 leu mai puțin decât un pix. Obținem:
+    <div class="sys"><div>2x + 3y = 8</div><div>x − y = −1</div></div>
+    Matriceal: <span class="mxwrap"><span class="mx" data-m="2,3;1,-1"></span> · <span class="mx" data-m="x;y"></span> = <span class="mx" data-m="8;-1"></span></span>. Soluția: <i>x</i> = 1, <i>y</i> = 2.
+  </div>
+  <div class="box def"><strong>Unde apar sistemele liniare?</strong>
+    De multe ori ca <b>rezultat al aplicării altor metode numerice</b>: aproximarea funcțiilor (interpolare, metoda celor mai mici pătrate), discretizarea ecuațiilor diferențiale, analiza circuitelor electrice (legile lui Kirchhoff), statica structurilor, grafică 3D, învățare automată. În practică <i>n</i> poate fi de ordinul miilor sau milioanelor — de aceea contează mult <b>cât de rapidă</b> este metoda.
+  </div>
+
+  <h3>Interpretarea geometrică (2 ecuații, 2 necunoscute)</h3>
+  <p>Fiecare ecuație <span class="f">ax + by = c</span> reprezintă o <b>dreaptă</b> în plan. Soluția sistemului = <b>punctul de intersecție</b>. Sunt trei situații posibile: drepte concurente (soluție unică), paralele (nicio soluție), confundate (o infinitate de soluții).</p>
+  <div class="lab" id="geo">
+    <div class="lt">🧪 Laborator interactiv: două drepte</div>
+    <div class="ctr">
+      <span>Ecuația 1:</span><input type="number" id="g_a1" value="2" step="0.5" style="width:70px"> x + <input type="number" id="g_b1" value="3" step="0.5" style="width:70px"> y = <input type="number" id="g_c1" value="8" step="0.5" style="width:70px">
+    </div>
+    <div class="ctr">
+      <span>Ecuația 2:</span><input type="number" id="g_a2" value="1" step="0.5" style="width:70px"> x + <input type="number" id="g_b2" value="-1" step="0.5" style="width:70px"> y = <input type="number" id="g_c2" value="-1" step="0.5" style="width:70px">
+    </div>
+    <div class="ctr">
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="g_elim"> arată ecuația 2 <b>după eliminarea lui x</b> (L<sub>2</sub> ← L<sub>2</sub> − (a<sub>21</sub>/a<sub>11</sub>)·L<sub>1</sub>)</label>
+      <button data-g="2,3,8,1,-1,-1">Concurente</button><button data-g="1,2,4,2,4,3">Paralele</button><button data-g="1,2,4,2,4,8">Confundate</button>
+    </div>
+    <canvas id="g_cv" width="560" height="420"></canvas>
+    <div class="out" id="g_out"></div>
+    <p class="small">Observă: după eliminare, a doua dreaptă devine <b>orizontală</b> (nu mai depinde de x), dar trece <b>prin același punct de intersecție</b>. Asta e esența metodei Gauss: transformăm sistemul într-unul mai simplu, cu <b>aceeași soluție</b>.</p>
+  </div>
+</section>
+
+<!-- ===================== C2 ===================== -->
+<section id="c2">
+  <h2>2. Clasificarea metodelor de rezolvare <span class="lvl l1">Nivel 1</span></h2>
+  <div class="svgw"><svg viewBox="0 0 860 260" role="img" aria-label="Clasificarea metodelor">
+    <g font-size="14">
+      <rect x="320" y="10" width="220" height="44" rx="10" fill="#2f5bea" opacity=".18" stroke="#2f5bea"/><text x="430" y="37" text-anchor="middle" font-weight="700">Sistem liniar A·X = B</text>
+      <path d="M380 54 L200 100 M480 54 L660 100" stroke="#7a849a" stroke-width="2" fill="none"/>
+      <rect x="40" y="100" width="320" height="60" rx="10" fill="#0e9f6e" opacity=".15" stroke="#0e9f6e"/>
+      <text x="200" y="125" text-anchor="middle" font-weight="700">Metode DIRECTE (exacte)</text><text x="200" y="146" text-anchor="middle" font-size="12.5">soluția după un număr FINIT de pași</text>
+      <rect x="500" y="100" width="320" height="60" rx="10" fill="#c2410c" opacity=".15" stroke="#c2410c"/>
+      <text x="660" y="125" text-anchor="middle" font-weight="700">Metode INDIRECTE (iterative)</text><text x="660" y="146" text-anchor="middle" font-size="12.5">soluția = limita unui șir de aproximații</text>
+      <text x="200" y="190" text-anchor="middle">Cramer · Gauss · Gauss-Jordan · Crout (LU)</text>
+      <text x="660" y="190" text-anchor="middle">Jacobi · Gauss-Seidel · relaxare</text>
+      <text x="200" y="225" text-anchor="middle" font-size="12.5" fill="#0e9f6e">erori: doar de ROTUNJIRE</text>
+      <text x="660" y="225" text-anchor="middle" font-size="12.5" fill="#c2410c">erori: ROTUNJIRE + TRUNCHIERE</text>
+    </g></svg></div>
+  <div class="grid2">
+    <div class="box prop" style="margin:0"><strong>Metode directe</strong>Execută un număr <b>fix, cunoscut dinainte</b> de operații. Teoretic dau soluția exactă, dar pe calculator fiecare operație cu numere reale se face cu un număr limitat de cifre ⇒ apar <b>erori de rotunjire</b>. Deci: <i>rezultatele „metodei exacte” sunt de fapt aproximative!</i></div>
+    <div class="box warnb" style="margin:0"><strong>Metode iterative</strong>Pornesc de la o aproximație <span class="f">X^{(0)}</span> și construiesc <span class="f">X^{(1)}, X^{(2)}, ...</span> care converg spre soluție. Ne oprim după un număr finit de pași ⇒ pe lângă rotunjire apare și <b>eroarea de trunchiere</b> (am „tăiat” un proces infinit).</div>
+  </div>
+  <div class="box idea"><strong>Analogie</strong> Metoda directă e ca o rețetă cu pași numerotați: după pasul 7 tortul e gata. Metoda iterativă e ca ajustarea temperaturii la duș: te apropii tot mai mult de temperatura dorită și te oprești când e „destul de bine”.</div>
+  <p>În această unitate studiem <b>metodele directe</b>: Gauss și Cramer (cu Gauss-Jordan și LU ca extensii).</p>
+</section>
+
+<!-- ===================== C3 ===================== -->
+<section id="c3">
+  <h2>3. Matrice triunghiulare și diagonale <span class="lvl l1">Nivel 1</span></h2>
+  <p>Fie <span class="f">L, U, D \in M_n(R)</span> (matrice pătratice de ordin n). Ne interesează <b>unde se află zerourile</b>.</p>
+  <div class="box def"><strong>Definiția 1 — inferior triunghiulară</strong><span class="f">L</span> este inferior triunghiulară dacă <span class="f">l_{ij} = 0, \forall j &gt; i</span> (zerouri <b>deasupra</b> diagonalei principale).</div>
+  <div class="box def"><strong>Definiția 2 — superior triunghiulară</strong><span class="f">U</span> este superior triunghiulară dacă <span class="f">u_{ij} = 0, \forall j &lt; i</span> (zerouri <b>sub</b> diagonala principală).</div>
+  <div class="box def"><strong>Definiția 3 — diagonală</strong><span class="f">D</span> este diagonală dacă <span class="f">d_{ij} = 0, \forall j \ne i</span> (doar diagonala poate fi nenulă).</div>
+  <div class="grid2" style="text-align:center">
+    <div class="card"><b>Inferior triunghiulară</b><br><span class="mx" data-m="2,0,0;1,3,0;4,5,6" data-hl="lower"></span></div>
+    <div class="card"><b>Superior triunghiulară</b><br><span class="mx" data-m="2,1,4;0,3,5;0,0,6" data-hl="upper"></span></div>
+    <div class="card"><b>Diagonală</b><br><span class="mx" data-m="2,0,0;0,3,0;0,0,6" data-hl="diag"></span></div>
+  </div>
+  <div class="box idea"><strong>Truc de memorare</strong> Privește indicii: <i>i</i> = linia, <i>j</i> = coloana. Deasupra diagonalei coloana e mai mare decât linia (<i>j &gt; i</i>); sub diagonală <i>j &lt; i</i>. „Inferior” = partea de jos e plină; „superior” = partea de sus e plină.</div>
+
+  <div class="lab" id="cls">
+    <div class="lt">🧪 Laborator: clasifică matricea</div>
+    <p class="small">Modifică elementele matricei 4×4. Programul îți spune ce tip are și colorează zonele.</p>
+    <div id="cls_grid"></div>
+    <div class="ctr"><button data-c="lower">Exemplu inferior</button><button data-c="upper">Exemplu superior</button><button data-c="diag">Exemplu diagonală</button><button data-c="full">Matrice oarecare</button></div>
+    <div class="out" id="cls_out"></div>
+  </div>
+
+  <h3>Propoziția 1 <span class="lvl l2">Nivel 2</span></h3>
+  <div class="box prop"><strong>Propoziția 1</strong>
+    a) Produsul a două matrice inferior (superior) triunghiulare este o matrice inferior (superior) triunghiulară.<br>
+    b) Dacă o matrice inferior (superior) triunghiulară este inversabilă, atunci inversa ei este tot inferior (superior) triunghiulară.<br>
+    c) Mulțimea soluțiilor sistemului (1) este invariantă la transformările elementare (vezi secțiunea 4).
+  </div>
+  <details><summary>Demonstrația pentru a) (inferior triunghiulare)</summary>
+    <p>Fie <span class="f">L, M</span> inferior triunghiulare și <span class="f">P = L \cdot M</span>. Atunci <span class="f">p_{ij} = \sum_{k=1}^{n} l_{ik} m_{kj}</span>. Luăm <span class="f">j &gt; i</span>. Pentru fiecare <i>k</i>:</p>
+    <ul><li>dacă <span class="f">k &gt; i</span> ⇒ <span class="f">l_{ik} = 0</span> (L inferior triunghiulară);</li><li>dacă <span class="f">k \le i</span> ⇒ <span class="f">k \le i &lt; j</span>, deci <span class="f">k &lt; j</span> ⇒ <span class="f">m_{kj} = 0</span>.</li></ul>
+    <p>Fiecare termen al sumei e 0, deci <span class="f">p_{ij} = 0</span> pentru <span class="f">j &gt; i</span>: P este inferior triunghiulară. ∎ Cazul superior se obține prin transpunere.</p>
+    <p>Bonus: elementele diagonale ale produsului sunt produsele elementelor diagonale: <span class="f">p_{ii} = l_{ii} m_{ii}</span>.</p>
+  </details>
+  <details><summary>Ideea pentru b)</summary>
+    <p>Pentru <span class="f">L</span> inferior triunghiulară inversabilă (<span class="f">l_{ii} \ne 0</span>), coloana <i>j</i> a inversei rezolvă <span class="f">L \cdot y = e_j</span>. Prin <b>substituție directă</b> (de sus în jos), primele <span class="f">j-1</span> componente ies 0 (membrul drept are 0 acolo) — deci zerouri deasupra diagonalei. Exemplu: <span class="mxwrap"><span class="mx" data-m="2,0;3,1" data-hl="lower"></span><sup>−1</sup> = <span class="mx" data-m="1/2,0;-3/2,1" data-hl="lower"></span></span></p>
+  </details>
+  <div class="lab" id="prod">
+    <div class="lt">🧪 Laborator: verifică Propoziția 1 pe exemple aleatoare</div>
+    <div class="ctr"><select id="prod_t"><option value="lower">inferior triunghiulare</option><option value="upper">superior triunghiulare</option></select><button class="pri" id="prod_go">Generează și calculează</button></div>
+    <div id="prod_out"></div>
+  </div>
+</section>
+
+<!-- ===================== C4 ===================== -->
+<section id="c4">
+  <h2>4. Transformări elementare <span class="lvl l1">Nivel 1</span></h2>
+  <div class="box def"><strong>Definiția 4</strong>Se numește <b>transformare elementară</b> a sistemului (1) oricare dintre operațiile:
+    <ol style="margin:6px 0 0"><li>linia <i>i</i> adunată cu linia <i>j</i> se trece în locul liniei <i>i</i> (<span class="f">L_i \leftarrow L_i + L_j</span>);</li>
+    <li>linia <i>i</i> înmulțită cu scalarul <span class="f">\lambda \ne 0</span> se trece în locul liniei <i>i</i> (<span class="f">L_i \leftarrow \lambda L_i</span>);</li>
+    <li>liniile <i>i</i> și <i>j</i> comută între ele (<span class="f">L_i \leftrightarrow L_j</span>).</li></ol>
+  </div>
+  <p>Combinând 1 și 2 obținem operația pe care o vom folosi cel mai des: <span class="f">L_i \leftarrow L_i + \lambda L_j</span> (de exemplu „scădem din linia 2 de 3 ori linia 1”).</p>
+  <div class="box prop"><strong>De ce nu se schimbă soluțiile? (Propoziția 1 c)</strong>Dacă un vector X verifică ecuațiile <i>i</i> și <i>j</i>, atunci verifică și suma lor, și ecuația înmulțită cu λ. Invers, fiecare operație poate fi <b>anulată</b> cu o operație de același tip (<span class="f">L_i \leftarrow L_i - \lambda L_j</span>, <span class="f">L_i \leftarrow \frac{1}{\lambda} L_i</span>, re-interschimbarea). Deci sistemul vechi și cel nou au exact aceleași soluții: sunt <b>echivalente</b>.</div>
+  <div class="box warnb"><strong>Atenție la λ = 0</strong>Înmulțirea unei linii cu 0 <b>nu</b> este transformare elementară: pierdem o ecuație și nu o mai putem recupera (operația nu e inversabilă).</div>
+  <div class="lab" id="et">
+    <div class="lt">🧪 Laborator: aplică transformări și urmărește soluția</div>
+    <p class="small">Aplică orice transformări dorești. Soluția rămâne mereu aceeași. Urmărește și ce se întâmplă cu determinantul — vei avea nevoie de asta în secțiunea 9.</p>
+    <div id="et_sys"></div>
+    <div class="ctr">
+      <label class="c">Operație<select id="et_op"><option value="add">L_i ← L_i + λ·L_j</option><option value="mul">L_i ← λ·L_i</option><option value="swap">L_i ↔ L_j</option></select></label>
+      <label class="c">i<select id="et_i"><option>1</option><option>2</option><option>3</option></select></label>
+      <label class="c">j<select id="et_j"><option>1</option><option selected>2</option><option>3</option></select></label>
+      <label class="c">λ (ex: 3, -1/2)<input type="text" id="et_l" value="3/2" style="width:90px"></label>
+      <button class="pri" id="et_go">Aplică</button><button id="et_reset">Resetează</button>
+    </div>
+    <div class="out" id="et_out"></div>
+    <div id="et_log" class="small"></div>
+  </div>
+</section>
+
+<!-- ===================== C5 ===================== -->
+<section id="c5">
+  <h2>5. Sisteme triunghiulare: substituția inversă <span class="lvl l1">Nivel 1</span></h2>
+  <p>Înainte de Gauss, să vedem <b>de ce</b> vrem o matrice superior triunghiulară: un astfel de sistem se rezolvă foarte ușor, <b>de jos în sus</b>.</p>
+  <div class="sys"><div>2x₁ − x₂ + 3x₃ = 9</div><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4x₂ − x₃ = 5</div><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3x₃ = 9</div></div>
+  <ol>
+    <li>Ultima ecuație are o singură necunoscută: <span class="f">x_3 = 9/3 = 3</span>.</li>
+    <li>Înlocuim în a doua: <span class="f">4x_2 - 3 = 5 \Rightarrow x_2 = 8/4 = 2</span>.</li>
+    <li>Înlocuim în prima: <span class="f">2x_1 - 2 + 9 = 9 \Rightarrow x_1 = 2/2 = 1</span>.</li>
+  </ol>
+  <p>Formula generală pentru <span class="f">U \cdot X = B</span> cu <span class="f">u_{kk} \ne 0</span>:</p>
+  <div class="F">x_n = \frac{b_n}{u_{nn}},    x_k = \frac{1}{u_{kk}} ( b_k - \sum_{i=k+1}^{n} u_{ki} x_i ),   k = n-1, ..., 1</div>
+  <p>În varianta din curs (Gauss cu pivoți aduși la 1), diagonala are numai 1, deci împărțirea dispare: <span class="f">x_k = b_k - \sum_{i=k+1}^{n} a_{ki} x_i</span>.</p>
+  <div class="lab" id="bs">
+    <div class="lt">🧪 Animație: substituția inversă</div>
+    <div id="bs_view"></div>
+    <div class="ctr"><button id="bs_prev">◀ Înapoi</button><button class="pri" id="bs_next">Pasul următor ▶</button><button id="bs_reset">De la capăt</button></div>
+  </div>
+  <div class="box idea"><strong>Simetric: substituția directă</strong> Pentru o matrice <b>inferior</b> triunghiulară mergem de sus în jos: <span class="f">x_1 = b_1/l_{11}</span>, apoi <span class="f">x_2</span>, … Aceasta se folosește la metoda LU (secțiunea 14).</div>
+</section>
+
+<!-- ===================== C6 ===================== -->
+<section id="c6">
+  <h2>6. Metoda eliminării Gauss <span class="lvl l2">Nivel 2</span></h2>
+  <p><b>Ideea de bază:</b> prin transformări elementare aducem matricea sistemului la o formă <b>superior triunghiulară</b>, apoi substituim variabilele <b>în sens invers</b>. Altfel spus: <b>eliminăm succesiv necunoscutele</b>.</p>
+  <div class="svgw"><svg viewBox="0 0 860 150" role="img" aria-label="Fazele metodei Gauss">
+    <g font-size="13">
+      <rect x="10" y="20" width="150" height="110" rx="10" fill="#2f5bea" opacity=".1" stroke="#2f5bea"/>
+      <text x="85" y="45" text-anchor="middle" font-weight="700">[A | B]</text><text x="85" y="72" text-anchor="middle">* * * | *</text><text x="85" y="92" text-anchor="middle">* * * | *</text><text x="85" y="112" text-anchor="middle">* * * | *</text>
+      <text x="245" y="65" text-anchor="middle" font-weight="700">ELIMINARE</text><text x="245" y="85" text-anchor="middle">pașii k = 1 … n</text>
+      <path d="M170 75 L320 75" stroke="#7a849a" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="330" y="20" width="160" height="110" rx="10" fill="#0e9f6e" opacity=".1" stroke="#0e9f6e"/>
+      <text x="410" y="45" text-anchor="middle" font-weight="700">[A⁽ⁿ⁾ | B⁽ⁿ⁾]</text><text x="410" y="72" text-anchor="middle">1 * * | *</text><text x="410" y="92" text-anchor="middle">0 1 * | *</text><text x="410" y="112" text-anchor="middle">0 0 1 | *</text>
+      <text x="580" y="65" text-anchor="middle" font-weight="700">SUBSTITUȚIE</text><text x="580" y="85" text-anchor="middle">inversă, k = n … 1</text>
+      <path d="M500 75 L660 75" stroke="#7a849a" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="670" y="20" width="170" height="110" rx="10" fill="#c2410c" opacity=".1" stroke="#c2410c"/>
+      <text x="755" y="45" text-anchor="middle" font-weight="700">Soluția X</text><text x="755" y="72" text-anchor="middle">x₁ = …</text><text x="755" y="92" text-anchor="middle">x₂ = …</text><text x="755" y="112" text-anchor="middle">x₃ = …</text>
+    </g></svg></div>
+
+  <h3>6.1 Primul pas, explicat pe înțeles</h3>
+  <p>Fie sistemul <span class="f">A \cdot X = B</span>, <span class="f">A = (a_{ij})_{i,j=1..n}</span>. La primul pas <b>eliminăm <span class="f">x_1</span> din toate ecuațiile, mai puțin prima</b>:</p>
+  <ol>
+    <li>Împărțim prima linie la <b>pivotul</b> <span class="f">a_{11} \ne 0</span>. Obținem: <span class="f">x_1 + a_{12}^{(1)} x_2 + ... + a_{1n}^{(1)} x_n = b_1^{(1)}</span>.</li>
+    <li>Cu această ecuație (care începe cu <span class="f">1 \cdot x_1</span>) eliminăm <span class="f">x_1</span> din celelalte: din linia <i>i</i> scădem linia 1 înmulțită cu <span class="f">a_{i1}</span>. Coeficientul lui <span class="f">x_1</span> devine <span class="f">a_{i1} - a_{i1} \cdot 1 = 0</span>.</li>
+  </ol>
+  <h3>6.2 Pasul general k</h3>
+  <p>După pasul <i>k</i> (k = 1, 2, …, n−1) al fazei de eliminare, <span class="f">x_k</span> a fost eliminat din ultimele <span class="f">n-k</span> ecuații. Sistemul arată astfel:</p>
+  <div style="text-align:center"><span class="mx" id="genk"></span></div>
+  <div class="box prop"><strong>Formulele pasului k — linia pivot k</strong>
+    <div class="F">a_{kk}^{(k)} = 1,   a_{kj}^{(k)} = \frac{a_{kj}^{(k-1)}}{a_{kk}^{(k-1)}},   b_k^{(k)} = \frac{b_k^{(k-1)}}{a_{kk}^{(k-1)}},   j = k+1, ..., n</div>
+  </div>
+  <div class="box prop"><strong>Formulele pasului k — liniile nepivot i = k+1, …, n</strong>
+    <div class="F">a_{ik}^{(k)} = 0,   a_{ij}^{(k)} = a_{ij}^{(k-1)} - a_{ik}^{(k-1)} \cdot a_{kj}^{(k)},   b_i^{(k)} = b_i^{(k-1)} - a_{ik}^{(k-1)} \cdot b_k^{(k)}</div>
+    <p style="margin:0">pentru <span class="f">j = k+1, ..., n</span>. Atenție la indici: factorul <span class="f">a_{ik}^{(k-1)}</span> este valoarea <b>veche</b> din coloana pivotului, iar <span class="f">a_{kj}^{(k)}</span> este valoarea <b>nouă</b> (deja împărțită) din linia pivot.</p>
+  </div>
+  <div class="box idea"><strong>Regula „dreptunghiului” — cum ții minte formula</strong>
+    Elementul nou <span class="f">a_{ij}^{(k)}</span> = elementul vechi − (elementul din <b>aceeași linie</b>, coloana pivotului) × (elementul din <b>aceeași coloană</b>, linia pivot). Cele patru elemente formează colțurile unui dreptunghi care are pivotul într-un colț.
+  </div>
+  <div class="box warnb"><strong>Observație importantă</strong> La pasul <i>k</i> se modifică <b>doar</b> elementele delimitate de linia <i>k</i> și coloana <i>k</i> (blocul din dreapta-jos, colorat cu albastru deschis în simulator); celelalte rămân neschimbate.</div>
+  <p>La final, la pasul <span class="f">k = n</span>, împărțim ultima ecuație la ultimul pivot <span class="f">a_{nn}^{(n-1)}</span>: <span class="f">a_{nn}^{(n)} = 1,  b_n^{(n)} = b_n^{(n-1)} / a_{nn}^{(n-1)}</span>. Sistemul devine <span class="f">A^{(n)} X = B^{(n)}</span>, cu <span class="f">A^{(n)}</span> superior triunghiulară cu 1 pe diagonală. Apoi:</p>
+  <div class="F">x_n = b_n^{(n)},     x_k = b_k^{(k)} - \sum_{i=k+1}^{n} a_{ki}^{(k)} x_i,   k = n-1, ..., 1</div>
+
+  <h3>6.3 Exemplu complet rezolvat (3×3)</h3>
+  <div class="sys"><div>&nbsp;2x₁ + x₂ − x₃ = 8</div><div>−3x₁ − x₂ + 2x₃ = −11</div><div>−2x₁ + x₂ + 2x₃ = −3</div></div>
+  <p><b>Pasul 1</b> (pivot <span class="f">a_{11}^{(0)} = 2</span>):</p>
+  <ul>
+    <li>L<sub>1</sub> ÷ 2: <span class="f">[1,  1/2,  -1/2 | 4]</span>.</li>
+    <li>L<sub>2</sub> ← L<sub>2</sub> − (−3)·L<sub>1</sub>: de exemplu <span class="f">a_{22}^{(1)} = -1 - (-3)(1/2) = 1/2</span>; rezultă <span class="f">[0,  1/2,  1/2 | 1]</span>.</li>
+    <li>L<sub>3</sub> ← L<sub>3</sub> − (−2)·L<sub>1</sub>: <span class="f">a_{32}^{(1)} = 1 - (-2)(1/2) = 2</span>; rezultă <span class="f">[0,  2,  1 | 5]</span>.</li>
+  </ul>
+  <p><b>Pasul 2</b> (pivot <span class="f">a_{22}^{(1)} = 1/2</span>): L<sub>2</sub> ÷ (1/2) ⇒ <span class="f">[0, 1, 1 | 2]</span>; L<sub>3</sub> ← L<sub>3</sub> − 2·L<sub>2</sub> ⇒ <span class="f">[0, 0, -1 | 1]</span>.</p>
+  <p><b>Pasul 3</b> (pivot <span class="f">a_{33}^{(2)} = -1</span>): L<sub>3</sub> ÷ (−1) ⇒ <span class="f">[0, 0, 1 | -1]</span>.</p>
+  <p><b>Substituția inversă:</b> <span class="f">x_3 = -1</span>; <span class="f">x_2 = 2 - 1 \cdot (-1) = 3</span>; <span class="f">x_1 = 4 - \frac{1}{2} \cdot 3 - (-\frac{1}{2}) \cdot (-1) = 4 - 1.5 - 0.5 = 2</span>.</p>
+  <p class="msg-ok">Soluția: X = (2, 3, −1). Verificare în prima ecuație: 2·2 + 3 − (−1) = 8 ✓</p>
+  <h4>Același exemplu, vizual (toate etapele)</h4>
+  <div class="legend"><span><i style="background:var(--piv)"></i>pivot</span><span><i style="background:var(--reg)"></i>zona modificată la pasul k</span><span><i style="background:var(--tgt)"></i>linia transformată</span><span><i style="background:var(--zero)"></i>zerouri obținute</span></div>
+  <div id="story" class="grid2"></div>
+</section>
+
+<!-- ===================== C7 ===================== -->
+<section id="c7">
+  <h2>7. Simulator Gauss pas cu pas <span class="lvl l2">Nivel 2</span></h2>
+  <p>Introdu orice sistem (până la 6×6) sau alege un exemplu. Simulatorul arată fiecare operație, formula aplicată cu numere, zona modificată, evoluția determinantului și substituția inversă. Poți scrie fracții (<code>1/3</code>) și zecimale (<code>0.25</code>).</p>
+  <div class="lab" id="gs">
+    <div class="lt">🧪 Simulatorul metodei eliminării</div>
+    <div class="ctr">
+      <label class="c">Exemplu<select id="gs_preset"></select></label>
+      <label class="c">Dimensiune n<select id="gs_n"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select></label>
+      <label class="c">Aritmetică<select id="gs_ar"><option value="exact">fracții exacte</option><option value="float">virgulă mobilă (double)</option></select></label>
+      <label class="c">Strategie<select id="gs_mode"><option value="classic">Gauss clasic (curs)</option><option value="partial">Gauss cu pivotare parțială</option><option value="gj">Gauss-Jordan</option></select></label>
+    </div>
+    <div id="gs_in"></div>
+    <div class="ctr"><button class="pri" id="gs_run">▶ Rezolvă pas cu pas</button><button id="gs_rand">🎲 Sistem aleator</button></div>
+    <div id="gs_err" class="msg-bad"></div>
+    <div id="gs_view" hidden>
+      <div class="ctr"><button id="gs_first">⏮</button><button id="gs_prev">◀ Înapoi</button><button class="pri" id="gs_next">Înainte ▶</button><button id="gs_last">⏭</button><button id="gs_play">⏵ Redare automată</button><span class="small" id="gs_cnt"></span></div>
+      <div class="bar"><div id="gs_bar"></div></div>
+      <div class="stepper">
+        <div class="stepbox">
+          <div class="steptitle" id="gs_title"></div>
+          <div class="stepdesc" id="gs_desc"></div>
+          <div class="scroll" id="gs_mat"></div>
+          <div class="chips" id="gs_x"></div>
+          <div class="legend"><span><i style="background:var(--piv)"></i>pivot</span><span><i style="background:var(--reg)"></i>zona pasului k</span><span><i style="background:var(--tgt)"></i>linia modificată</span><span><i style="background:var(--swp)"></i>linii interschimbate</span></div>
+        </div>
+        <div class="steplist"><b class="small">Toți pașii (click pentru salt)</b><ol id="gs_list"></ol></div>
+      </div>
+      <div class="out" id="gs_sum"></div>
+    </div>
+  </div>
+  <div class="box idea"><strong>Exerciții cu simulatorul</strong>
+    <ol style="margin:4px 0 0">
+      <li>Rulează „Exemplul din curs” și compară fiecare pas cu secțiunea 6.3.</li>
+      <li>Rulează același sistem cu „virgulă mobilă” — observi valori precum 0.5 în loc de 1/2.</li>
+      <li>Alege „Pivot nul” cu strategia clasică: de ce apare o interschimbare?</li>
+      <li>Rulează un sistem 5×5 aleator și numără pașii. Cum crește numărul de operații cu n?</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== C8 ===================== -->
+<section id="c8">
+  <h2>8. Pivot nul și strategii de pivotare <span class="lvl l2">Nivel 2</span></h2>
+  <p>Formulele împart la pivotul <span class="f">a_{kk}^{(k-1)}</span>. Ce facem dacă acesta este <b>0</b>?</p>
+  <div class="sys"><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₂ + x₃ = 3</div><div>x₁ + x₂ + x₃ = 4</div><div>2x₁ + x₂ + 3x₃ = 9</div></div>
+  <p>Aici <span class="f">a_{11} = 0</span>. Dar putem folosi transformarea elementară 3 (interschimbarea liniilor): căutăm <b>sub pivot</b>, în coloana <i>k</i>, un element nenul și interschimbăm liniile. Ordinea ecuațiilor nu contează, deci soluția nu se schimbă.</p>
+  <ul>
+    <li><b>Gauss clasic (curs):</b> interschimbăm doar dacă pivotul e exact 0, cu prima linie de sub el care are element nenul.</li>
+    <li><b>Pivotare parțială:</b> la <b>fiecare</b> pas alegem ca pivot elementul de modul <b>maxim</b> din coloana <i>k</i> (liniile k…n). Motivul: împărțirea la numere mici amplifică erorile de rotunjire (vezi secțiunea 12).</li>
+    <li><b>Pivotare totală:</b> căutăm maximul în tot blocul rămas (interschimbăm și coloane, deci și ordinea necunoscutelor). Mai stabilă, dar mai costisitoare.</li>
+  </ul>
+  <div class="box warnb"><strong>Dacă nu găsim niciun element nenul</strong> în coloana <i>k</i> de la linia <i>k</i> în jos, atunci <span class="f">\det A = 0</span>: sistemul nu are soluție unică (secțiunea 13).</div>
+  <p>Încearcă în simulator (secțiunea 7) exemplul <b>„Pivot nul (necesită interschimbare)”</b>. Rezultatul: X = (1, 1, 2).</p>
+</section>
+
+<!-- ===================== C9 ===================== -->
+<section id="c9">
+  <h2>9. Calculul determinanților prin eliminare <span class="lvl l2">Nivel 2</span></h2>
+  <p>Metoda eliminării se poate folosi și pentru <b>calculul determinanților</b>: transformăm determinantul în unul echivalent, cu toate elementele de sub diagonala principală egale cu 0. Determinantul unei matrice triunghiulare = <b>produsul elementelor diagonale</b>.</p>
+  <h4>Cum afectează transformările determinantul</h4>
+  <table class="data"><tr><th>Transformare</th><th>Efect asupra det</th></tr>
+    <tr><td><span class="f">L_i \leftarrow L_i + \lambda L_j</span></td><td>nu se schimbă</td></tr>
+    <tr><td><span class="f">L_i \leftarrow \lambda L_i</span></td><td>se înmulțește cu λ</td></tr>
+    <tr><td><span class="f">L_i \leftrightarrow L_j</span></td><td>își schimbă semnul</td></tr></table>
+  <p>În metoda Gauss, la fiecare pas împărțim linia pivot la <span class="f">a_{kk}^{(k-1)}</span> (det se împarte la pivot), iar scăderile nu schimbă det. La final <span class="f">\det A^{(n)} = 1</span> (diagonală plină de 1). Deci:</p>
+  <div class="F">\det A^{(n)} = \frac{\det A}{a_{11}^{(0)} a_{22}^{(1)} ... a_{nn}^{(n-1)}} = 1   \Rightarrow   \det A = a_{11}^{(0)} \cdot a_{22}^{(1)} \cdot ... \cdot a_{nn}^{(n-1)}</div>
+  <p>Adică <b>determinantul = produsul pivoților</b> (înmulțit cu <span class="f">(-1)^s</span>, unde s = numărul de interschimbări de linii).</p>
+  <p><b>Exemplu</b> (sistemul din 6.3): pivoții au fost 2, 1/2, −1 ⇒ <span class="f">\det A = 2 \cdot \frac{1}{2} \cdot (-1) = -1</span>. Verificare prin dezvoltare: 2(−2−2) − 1(−6+4) + (−1)(−3−2) = −8 + 2 + 5 = −1 ✓</p>
+  <div class="lab" id="dt">
+    <div class="lt">🧪 Calculator de determinant prin eliminare</div>
+    <div class="ctr"><label class="c">n<select id="dt_n"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label><button id="dt_rand">🎲 Aleator</button><button class="pri" id="dt_go">Calculează</button></div>
+    <div id="dt_in"></div>
+    <div id="dt_out"></div>
+  </div>
+</section>
+
+<!-- ===================== C10 ===================== -->
+<section id="c10">
+  <h2>10. Metoda Cramer <span class="lvl l1">Nivel 1</span> → <span class="lvl l2">Nivel 2</span></h2>
+  <p>Dacă <span class="f">\Delta = \det A \ne 0</span>, sistemul are soluție unică dată de formulele lui Cramer:</p>
+  <div class="F">x_i = \frac{\Delta_i}{\Delta},    i = 1, ..., n</div>
+  <p>unde <span class="f">\Delta_i</span> este determinantul obținut din <span class="f">A</span> prin <b>înlocuirea coloanei i cu coloana termenilor liberi B</b>.</p>
+  <h4>Exemplu 2×2</h4>
+  <div class="sys"><div>2x + 3y = 8</div><div>x − y = −1</div></div>
+  <p><span class="f">\Delta = 2 \cdot (-1) - 3 \cdot 1 = -5</span>, <span class="f">\Delta_x = 8 \cdot (-1) - 3 \cdot (-1) = -5</span>, <span class="f">\Delta_y = 2 \cdot (-1) - 8 \cdot 1 = -10</span> ⇒ <span class="f">x = 1, y = 2</span>.</p>
+  <h4>Regula lui Sarrus (doar pentru 3×3)</h4>
+  <div class="svgw"><svg viewBox="0 0 420 200" role="img" aria-label="Regula lui Sarrus">
+    <g font-size="17" font-style="italic" text-anchor="middle">
+      <text x="50" y="45">a₁₁</text><text x="120" y="45">a₁₂</text><text x="190" y="45">a₁₃</text><text x="260" y="45" opacity=".55">a₁₁</text><text x="330" y="45" opacity=".55">a₁₂</text>
+      <text x="50" y="105">a₂₁</text><text x="120" y="105">a₂₂</text><text x="190" y="105">a₂₃</text><text x="260" y="105" opacity=".55">a₂₁</text><text x="330" y="105" opacity=".55">a₂₂</text>
+      <text x="50" y="165">a₃₁</text><text x="120" y="165">a₃₂</text><text x="190" y="165">a₃₃</text><text x="260" y="165" opacity=".55">a₃₁</text><text x="330" y="165" opacity=".55">a₃₂</text>
+    </g>
+    <g stroke-width="2.5" opacity=".7"><line x1="40" y1="28" x2="200" y2="175" stroke="#0e9f6e"/><line x1="110" y1="28" x2="270" y2="175" stroke="#0e9f6e"/><line x1="180" y1="28" x2="340" y2="175" stroke="#0e9f6e"/>
+    <line x1="40" y1="175" x2="200" y2="28" stroke="#dc2626" stroke-dasharray="6 4"/><line x1="110" y1="175" x2="270" y2="28" stroke="#dc2626" stroke-dasharray="6 4"/><line x1="180" y1="175" x2="340" y2="28" stroke="#dc2626" stroke-dasharray="6 4"/></g>
+    <line x1="225" y1="15" x2="225" y2="185" stroke="#7a849a" stroke-dasharray="3 3"/>
+  </svg></div>
+  <p class="small">Copiem primele două coloane în dreapta. Diagonalele verzi (↘) se adună, cele roșii (↗) se scad.</p>
+  <div class="lab" id="cr">
+    <div class="lt">🧪 Calculator Cramer cu vizualizarea determinanților Δᵢ</div>
+    <div class="ctr"><label class="c">n<select id="cr_n"><option>2</option><option selected>3</option><option>4</option></select></label><button id="cr_rand">🎲 Aleator</button><button class="pri" id="cr_go">Rezolvă cu Cramer</button></div>
+    <div id="cr_in"></div>
+    <div id="cr_out"></div>
+  </div>
+  <div class="box warnb"><strong>Cât costă metoda Cramer?</strong>
+    Cere calculul a <b>n+1 determinanți de ordin n</b>. Dacă fiecare e calculat prin eliminare (diagonalizare), costul e de aproximativ <b>n+1 ori</b> costul unei eliminări Gauss. Dacă e calculat prin dezvoltare (Laplace) sau „după definiție” (n! termeni), costul explodează. Concluzie: Cramer este util <b>teoretic</b> și pentru sisteme mici (2×2, 3×3), dar nu pentru sisteme mari.
+  </div>
+</section>
+
+<!-- ===================== C11 ===================== -->
+<section id="c11">
+  <h2>11. Complexitatea metodei: O(n³) <span class="lvl l3">Nivel 3</span></h2>
+  <p>Numărăm operațiile aritmetice pentru varianta din curs (pivoți aduși la 1). Notăm <span class="f">m = n - k</span> = numărul de linii de sub pivot la pasul k.</p>
+  <table class="data"><tr><th>Etapă</th><th>Înmulțiri/împărțiri</th><th>Adunări/scăderi</th></tr>
+    <tr><td>Pasul k: împărțirea liniei pivot (coloanele k+1…n și b)</td><td><span class="f">m + 1</span></td><td>0</td></tr>
+    <tr><td>Pasul k: fiecare din cele m linii nepivot</td><td><span class="f">m (m + 1)</span></td><td><span class="f">m (m + 1)</span></td></tr>
+    <tr><td>Substituția inversă pentru <span class="f">x_k</span></td><td><span class="f">m</span></td><td><span class="f">m</span></td></tr></table>
+  <p>Însumând după k = 1…n (<span class="f">m = 0 ... n-1</span>) și folosind <span class="f">\sum m(m+1) = \frac{(n-1)n(n+1)}{3}</span>:</p>
+  <div class="F">N_{\times,÷} = \frac{n^3 + 3n^2 - n}{3},     N_{+,-} = \frac{n^3 - n}{3} + \frac{n(n-1)}{2}</div>
+  <div class="F">N_{total} \approx \frac{2}{3} n^3   \Rightarrow   O(n^3)</div>
+  <p>Verificare pentru n = 2: <span class="f">N_{\times,÷} = (8 + 12 - 2)/3 = 6</span>. Numărăm direct: pasul 1 — 2 împărțiri + 2 înmulțiri; pasul 2 — 1 împărțire; substituția — 1 înmulțire. Total 6 ✓.</p>
+  <div class="box idea"><strong>Ce înseamnă O(n³) în practică?</strong> Dacă dublezi n, timpul crește de aproximativ 2³ = <b>8 ori</b>. Faza de eliminare domină; substituția inversă costă doar O(n²).</div>
+  <div class="lab" id="cx">
+    <div class="lt">🧪 Gauss vs. Cramer: câte operații?</div>
+    <div class="ctr"><label class="c">n maxim: <b id="cx_nv">12</b><input type="range" id="cx_n" min="3" max="25" value="12"></label><span class="small">Axa verticală este logaritmică (fiecare linie = ×10). Viteză presupusă: 10⁹ operații/secundă.</span></div>
+    <canvas id="cx_cv" width="720" height="360"></canvas>
+    <div class="scroll" id="cx_tab"></div>
+  </div>
+</section>
+
+<!-- ===================== C12 ===================== -->
+<section id="c12">
+  <h2>12. Erori de rotunjire și importanța pivotării <span class="lvl l3">Nivel 3</span></h2>
+  <p>Calculatorul reprezintă numerele reale în virgulă mobilă (double: ~16 cifre semnificative). De exemplu, în JavaScript <code>0.1 + 0.2</code> dă <code id="r_ex"></code>. Fiecare operație poate introduce o mică eroare — de aceea și metodele „exacte” dau rezultate <b>aproximative</b>.</p>
+  <h4>Exemplul clasic: un pivot foarte mic</h4>
+  <div class="sys"><div>ε·x₁ + x₂ = 1</div><div>&nbsp;&nbsp;x₁ + x₂ = 2</div></div>
+  <p>Soluția exactă: <span class="f">x_1 = \frac{1}{1-\varepsilon} \approx 1</span>, <span class="f">x_2 = \frac{1-2\varepsilon}{1-\varepsilon} \approx 1</span>. Cu Gauss clasic, pivotul este ε; împărțim la el și apar numere uriașe (1/ε) care „înghit” informația utilă.</p>
+  <div class="lab" id="rd">
+    <div class="lt">🧪 Experiment: ε din ce în ce mai mic</div>
+    <div class="ctr"><label class="c">ε = 10<sup id="rd_e">-8</sup><input type="range" id="rd_s" min="1" max="20" value="8"></label></div>
+    <div class="scroll" id="rd_out"></div>
+  </div>
+  <div class="box prop"><strong>Concluzie</strong> Fără pivotare, pentru ε ≤ 10⁻¹⁷ rezultatul pentru x₁ devine complet greșit (0 în loc de 1). Cu <b>pivotare parțială</b> (interschimbăm ecuațiile, pivotul devine 1) rezultatul este corect. Regulă practică: <b>folosește întotdeauna pivotarea parțială</b> în implementări reale.</div>
+  <div class="box idea"><strong>Condiționarea</strong> Unele sisteme sunt „sensibile” prin natura lor (<b>prost condiționate</b>): mici erori în date sau în calcule produc erori mari în soluție, oricât de bun ar fi algoritmul. Exemplul celebru este matricea Hilbert — vezi experimentul din laborator (L5).</div>
+</section>
+
+<!-- ===================== C13 ===================== -->
+<section id="c13">
+  <h2>13. Sisteme singulare: incompatibile și nedeterminate <span class="lvl l2">Nivel 2</span></h2>
+  <p>Când <span class="f">\det A = 0</span>, eliminarea se blochează: la un pas k nu există pivot nenul. Atunci comparăm <b>rangul</b> matricei A cu rangul matricei extinse [A | B] (teorema Kronecker–Capelli / Rouché):</p>
+  <table class="data"><tr><th>Situație</th><th>Ce vezi în eliminare</th><th>Concluzie</th></tr>
+    <tr><td>rang A = rang [A|B] = n</td><td>toți pivoții nenuli</td><td>soluție unică (compatibil determinat)</td></tr>
+    <tr><td>rang A = rang [A|B] &lt; n</td><td>apar linii <span class="f">[0 0 ... 0 | 0]</span></td><td>infinitate de soluții (compatibil nedeterminat)</td></tr>
+    <tr><td>rang A &lt; rang [A|B]</td><td>apare o linie <span class="f">[0 0 ... 0 | c]</span>, <span class="f">c \ne 0</span>, adică „0 = c”</td><td>nicio soluție (incompatibil)</td></tr></table>
+  <p>Încearcă în simulator exemplele „Singular — incompatibil” și „Singular — nedeterminat”.</p>
+</section>
+
+<!-- ===================== C14 ===================== -->
+<section id="c14">
+  <h2>14. Extensii avansate: Gauss-Jordan și descompunerea LU <span class="lvl l3">Nivel 3</span></h2>
+  <h4>Metoda Gauss-Jordan</h4>
+  <p>La fiecare pas eliminăm <span class="f">x_k</span> din <b>toate</b> celelalte ecuații (și de deasupra, nu doar de dedesubt). La final matricea devine matricea unitate, iar coloana B conține direct soluția — nu mai e nevoie de substituție inversă. Costul e mai mare (≈ n³ operații față de ≈ ⅔n³), dar metoda e convenabilă pentru <b>calculul inversei</b>: aplicând-o pe <span class="f">[A | I]</span> obținem <span class="f">[I | A^{-1}]</span>. Selectează „Gauss-Jordan” în simulator.</p>
+  <h4>Descompunerea LU (ideea metodei Crout)</h4>
+  <p>Eliminarea Gauss se poate „memora”: dacă păstrăm pivoții și factorii folosiți, obținem <span class="f">A = L \cdot U</span>, cu L inferior triunghiulară și U superior triunghiulară (în varianta Crout, U are 1 pe diagonală — exact ca matricea <span class="f">A^{(n)}</span> din curs!). Atunci <span class="f">A X = B</span> se rezolvă în două etape ieftine, O(n²) fiecare:</p>
+  <div class="F">L \cdot Y = B  (substituție directă),     U \cdot X = Y  (substituție inversă)</div>
+  <p>Avantaj major: dacă trebuie rezolvate multe sisteme cu <b>aceeași matrice A</b> și termeni liberi diferiți, factorizarea O(n³) se face o singură dată. Aici intervine Propoziția 1: produse și inverse de matrice triunghiulare rămân triunghiulare.</p>
+  <div class="lab" id="lu">
+    <div class="lt">🧪 Factorizarea Crout A = L·U pentru exemplul din curs</div>
+    <div id="lu_out"></div>
+  </div>
+</section>
+
+<div class="part">Partea a II-a · Seminar</div>
+
+<section id="s1">
+  <h2>Seminar — exerciții rezolvate</h2>
+  <p>Încearcă fiecare exercițiu singur, pe hârtie, apoi deschide soluția. Exercițiile sunt ordonate crescător după dificultate.</p>
+
+  <div class="ex"><div class="eh"><b>S1. Recunoașterea tipurilor de matrice</b><span class="lvl l1">Nivel 1</span></div>
+    <p>Stabiliți tipul fiecărei matrice: <span class="mxwrap">A = <span class="mx" data-m="1,0,0;0,5,0;0,0,-2"></span> B = <span class="mx" data-m="3,1,2;0,4,1;0,0,7"></span> C = <span class="mx" data-m="1,0,0;2,0,0;3,4,5"></span> D = <span class="mx" data-m="1,2;3,4"></span></span></p>
+    <details><summary>Soluție</summary><p>A este diagonală (și deci <b>și</b> inferior, <b>și</b> superior triunghiulară). B este superior triunghiulară. C este inferior triunghiulară (un 0 pe diagonală e permis — doar că C nu e inversabilă, det C = 1·0·5 = 0). D nu este de niciun tip special.</p></details></div>
+
+  <div class="ex"><div class="eh"><b>S2. Gauss pe un sistem 2×2</b><span class="lvl l1">Nivel 1</span></div>
+    <div class="sys"><div>x + 2y = 5</div><div>3x + 4y = 11</div></div>
+    <details><summary>Soluție</summary>
+      <p>Pasul 1: pivot 1, L<sub>1</sub> rămâne [1, 2 | 5]. L<sub>2</sub> ← L<sub>2</sub> − 3·L<sub>1</sub> = [0, 4 − 6 | 11 − 15] = [0, −2 | −4].</p>
+      <p>Pasul 2: L<sub>2</sub> ÷ (−2) = [0, 1 | 2].</p>
+      <p>Substituție: y = 2, x = 5 − 2·2 = 1. <span class="msg-ok">X = (1, 2)</span>. Determinant: 1·(−2) = −2.</p></details></div>
+
+  <div class="ex"><div class="eh"><b>S3. Gauss pe un sistem 3×3 + determinant</b><span class="lvl l2">Nivel 2</span></div>
+    <div class="sys"><div>x₁ + x₂ + x₃ = 6</div><div>2x₁ + 3x₂ + x₃ = 11</div><div>x₁ − x₂ + 2x₃ = 5</div></div>
+    <details><summary>Soluție</summary>
+      <p>Pasul 1 (pivot 1): L<sub>2</sub> ← L<sub>2</sub> − 2L<sub>1</sub> = [0, 1, −1 | −1]; L<sub>3</sub> ← L<sub>3</sub> − L<sub>1</sub> = [0, −2, 1 | −1].</p>
+      <p>Pasul 2 (pivot 1): L<sub>3</sub> ← L<sub>3</sub> + 2L<sub>2</sub> = [0, 0, −1 | −3].</p>
+      <p>Pasul 3 (pivot −1): L<sub>3</sub> = [0, 0, 1 | 3].</p>
+      <p>x₃ = 3; x₂ = −1 − (−1)·3 = 2; x₁ = 6 − 2 − 3 = 1. <span class="msg-ok">X = (1, 2, 3)</span>; det A = 1·1·(−1) = −1.</p>
+      <button class="pri" data-load="s3">Deschide în simulator</button></details></div>
+
+  <div class="ex"><div class="eh"><b>S4. Determinant 4×4 prin eliminare</b><span class="lvl l2">Nivel 2</span></div>
+    <p>Calculați <span class="mxwrap">det <span class="mx" data-m="1,2,0,1;2,5,1,3;0,1,3,2;1,3,2,4"></span></span>.</p>
+    <details><summary>Soluție</summary>
+      <p>Pasul 1 (pivot 1): L<sub>2</sub> − 2L<sub>1</sub> = [0,1,1,1]; L<sub>3</sub> neschimbat [0,1,3,2]; L<sub>4</sub> − L<sub>1</sub> = [0,1,2,3].</p>
+      <p>Pasul 2 (pivot 1): L<sub>3</sub> − L<sub>2</sub> = [0,0,2,1]; L<sub>4</sub> − L<sub>2</sub> = [0,0,1,2].</p>
+      <p>Pasul 3 (pivot 2): L<sub>3</sub> ÷ 2 = [0,0,1,1/2]; L<sub>4</sub> − L<sub>3</sub> = [0,0,0,3/2].</p>
+      <p>Pasul 4: pivot 3/2. <span class="msg-ok">det = 1·1·2·(3/2) = 3</span>. Prin dezvoltare Laplace ar fi trebuit calculați 4 determinanți 3×3!</p></details></div>
+
+  <div class="ex"><div class="eh"><b>S5. Metoda Cramer 3×3</b><span class="lvl l1">Nivel 1</span></div>
+    <div class="sys"><div>2x − y + z = 3</div><div>x + y + z = 6</div><div>3x + y − z = 2</div></div>
+    <details><summary>Soluție</summary>
+      <p>Δ = 2(1·(−1) − 1·1) − (−1)(1·(−1) − 1·3) + 1(1·1 − 1·3) = −4 − 4 − 2 = −10.</p>
+      <p>Δₓ (coloana 1 înlocuită cu (3, 6, 2)) = 3(−1 − 1) + 1(−6 − 2) + 1(6 − 2) = −6 − 8 + 4 = −10 ⇒ x = 1.</p>
+      <p>Δᵧ = 2(−6 − 2) − 3(−1 − 3) + 1(2 − 18) = −16 + 12 − 16 = −20 ⇒ y = 2.</p>
+      <p>Δ_z = 2(2 − 6) + 1(2 − 18) + 3(1 − 3) = −8 − 16 − 6 = −30 ⇒ z = 3. <span class="msg-ok">X = (1, 2, 3)</span></p></details></div>
+
+  <div class="ex"><div class="eh"><b>S6. Pivot nul — interschimbare de linii</b><span class="lvl l2">Nivel 2</span></div>
+    <div class="sys"><div>x₂ + x₃ = 3</div><div>x₁ + x₂ + x₃ = 4</div><div>2x₁ + x₂ + 3x₃ = 9</div></div>
+    <details><summary>Soluție</summary>
+      <p>a₁₁ = 0 ⇒ L<sub>1</sub> ↔ L<sub>2</sub>: [1,1,1|4], [0,1,1|3], [2,1,3|9].</p>
+      <p>Pasul 1: L<sub>3</sub> − 2L<sub>1</sub> = [0, −1, 1 | 1]. Pasul 2 (pivot 1): L<sub>3</sub> + L<sub>2</sub> = [0, 0, 2 | 4]. Pasul 3: L<sub>3</sub> ÷ 2 = [0,0,1|2].</p>
+      <p>x₃ = 2, x₂ = 3 − 2 = 1, x₁ = 4 − 1 − 2 = 1. <span class="msg-ok">X = (1, 1, 2)</span>. det A = (−1)¹·(1·1·2) = −2 (o interschimbare ⇒ semn schimbat).</p>
+      <button class="pri" data-load="zero">Deschide în simulator</button></details></div>
+
+  <div class="ex"><div class="eh"><b>S7. Discuție după parametru</b><span class="lvl l2">Nivel 2</span></div>
+    <p>Discutați sistemul după <i>m</i>: <span class="sys" style="display:inline-block"><span style="display:block">x + y + z = 1</span><span style="display:block">x + my + z = 1</span><span style="display:block">x + y + mz = 1</span></span></p>
+    <details><summary>Soluție</summary>
+      <p>L<sub>2</sub> − L<sub>1</sub> = [0, m−1, 0 | 0]; L<sub>3</sub> − L<sub>1</sub> = [0, 0, m−1 | 0]. Pivoții: 1, m−1, m−1 ⇒ det = (m−1)².</p>
+      <p><b>m ≠ 1:</b> soluție unică: (m−1)y = 0 ⇒ y = 0, z = 0, x = 1.</p>
+      <p><b>m = 1:</b> toate ecuațiile coincid: x + y + z = 1 ⇒ infinitate de soluții (y = α, z = β, x = 1 − α − β): compatibil dublu nedeterminat.</p></details></div>
+
+  <div class="ex"><div class="eh"><b>S8. Numărarea operațiilor</b><span class="lvl l3">Nivel 3</span></div>
+    <p>Câte înmulțiri/împărțiri și câte adunări/scăderi face metoda Gauss (varianta din curs) pentru n = 3?</p>
+    <details><summary>Soluție</summary>
+      <p>N<sub>×,÷</sub> = (27 + 27 − 3)/3 = 17; N<sub>+,−</sub> = (27 − 3)/3 + 3 = 11; total 28.</p>
+      <p>Verificare directă: pasul 1: 3 împărțiri + 2 linii × 3 înmulțiri = 9; pasul 2: 2 împărțiri + 1 linie × 2 = 4; pasul 3: 1 împărțire; substituția: 1 + 2 = 3 înmulțiri. Total 9 + 4 + 1 + 3 = 17 ✓.</p></details></div>
+
+  <div class="ex"><div class="eh"><b>S9. Pivot mic și rotunjire</b><span class="lvl l3">Nivel 3</span></div>
+    <p>Rezolvați cu 3 cifre semnificative (rotunjire după fiecare operație) sistemul 0.001x + y = 1, x + y = 2: (a) fără pivotare; (b) cu pivotare parțială.</p>
+    <details><summary>Soluție</summary>
+      <p>(a) Pivot 0.001: L<sub>1</sub> ÷ 0.001 ⇒ x + 1000y = 1000. L<sub>2</sub> − L<sub>1</sub>: (1 − 1000)y = 2 − 1000 ⇒ −999y = −998 ⇒ y = 0.999 (3 cifre). x = 1000 − 1000·0.999 = 1000 − 999 = 1.00. Aici iese bine, dar cu 2 cifre semnificative: 1 − 1000 → −1000, 2 − 1000 → −1000 ⇒ y = 1.0, x = 1000 − 1000 = 0 ✗ (corect ≈ 1.0).</p>
+      <p>(b) Interschimbăm: x + y = 2 (pivot 1), apoi L<sub>2</sub> − 0.001L<sub>1</sub>: 0.999y = 0.998 ⇒ y ≈ 0.999, x = 2 − 0.999 ≈ 1.00 ✓ — chiar și cu 2 cifre: y ≈ 1.0, x = 1.0 ✓.</p>
+      <p>Morala: pivoții mici amplifică erorile de rotunjire; pivotarea parțială le ține sub control.</p></details></div>
+</section>
+
+<section id="s2">
+  <h2>Seminar — exerciții propuse (cu răspunsuri)</h2>
+  <ol>
+    <li><span class="lvl l1">N1</span> Rezolvați prin Gauss și prin Cramer: 3x + y = 7, x − 2y = 0. <details><summary>Răspuns</summary>x = 2, y = 1; Δ = −7.</details></li>
+    <li><span class="lvl l1">N1</span> Rezolvați prin Cramer: 2x − y = 1, x + 3y = 11. <details><summary>Răspuns</summary>Δ = 7, Δₓ = 14, Δᵧ = 21 ⇒ x = 2, y = 3.</details></li>
+    <li><span class="lvl l2">N2</span> Rezolvați prin Gauss: x + 2y − z = 2, 2x − y + z = 3, x + y + z = 6. <details><summary>Răspuns</summary>X = (1, 2, 3). Pivoți: 1, −5, 9/5 ⇒ det = −9.</details></li>
+    <li><span class="lvl l2">N2</span> Calculați prin eliminare det [[2,1,3],[4,1,7],[−2,2,1]]. <details><summary>Răspuns</summary>Pivoți 2, −1, 7 ⇒ det = −14.</details></li>
+    <li><span class="lvl l2">N2</span> Discutați după m: x + y = 1, x + my = 2. <details><summary>Răspuns</summary>det = m − 1. Pentru m ≠ 1: y = 1/(m−1), x = (m−2)/(m−1). Pentru m = 1: 0 = 1 ⇒ incompatibil.</details></li>
+    <li><span class="lvl l2">N2</span> Rezolvați sistemul 4×4 cu matricea din S4 și B = (4, 11, 6, 10). <details><summary>Răspuns</summary>X = (1, 1, 1, 1) (fiecare bᵢ e suma liniei i).</details></li>
+    <li><span class="lvl l3">N3</span> Arătați că inversa unei matrice superior triunghiulare inversabile este superior triunghiulară. <details><summary>Indicație</summary>Dacă U e superior triunghiulară, Uᵀ e inferior triunghiulară; (U⁻¹)ᵀ = (Uᵀ)⁻¹ e inferior (Prop. 1b), deci U⁻¹ e superior.</details></li>
+    <li><span class="lvl l3">N3</span> Câte operații face Gauss pentru n = 100? Comparați cu ⅔n³. <details><summary>Răspuns</summary>N<sub>×,÷</sub> = 343 300, N<sub>+,−</sub> = 338 250, total 681 550 ≈ ⅔·10⁶ = 666 667.</details></li>
+    <li><span class="lvl l3">N3</span> Arătați că, dacă A este superior triunghiulară cu elemente diagonale nenule, eliminarea Gauss nu face nicio scădere și calculează det A = a₁₁a₂₂…aₙₙ. <details><summary>Indicație</summary>Sub fiecare pivot există numai zerouri, deci factorii a<sub>ik</sub> sunt 0; rămân doar împărțirile liniilor pivot.</details></li>
+    <li><span class="lvl l3">N3</span> Estimați raportul de cost Cramer (determinanți prin eliminare) / Gauss pentru n mare. <details><summary>Răspuns</summary>≈ (n+1)·(⅔n³)/(⅔n³) = n + 1 (Cramer e de ~n ori mai lent).</details></li>
+  </ol>
+</section>
+
+<div class="part">Partea a III-a · Laborator</div>
+
+<section id="l1">
+  <h2>L1. Pseudocodul algoritmului</h2>
+<pre><code>Algoritm GAUSS(A[1..n][1..n], b[1..n])
+  det ← 1
+  pentru k ← 1 la n execută
+     // (opțional) pivotare parțială
+     p ← indicele i ≥ k cu |a[i][k]| maxim
+     dacă a[p][k] = 0 atunci STOP: matrice singulară (det = 0)
+     dacă p ≠ k atunci interschimbă liniile p și k (inclusiv b); det ← −det
+     piv ← a[k][k];  det ← det · piv
+     // linia pivot
+     pentru j ← k+1 la n execută a[k][j] ← a[k][j] / piv
+     b[k] ← b[k] / piv;  a[k][k] ← 1
+     // liniile nepivot
+     pentru i ← k+1 la n execută
+        f ← a[i][k]
+        pentru j ← k+1 la n execută a[i][j] ← a[i][j] − f · a[k][j]
+        b[i] ← b[i] − f · b[k];  a[i][k] ← 0
+  // substituția inversă
+  x[n] ← b[n]
+  pentru k ← n−1 descrescător la 1 execută
+     s ← b[k]
+     pentru i ← k+1 la n execută s ← s − a[k][i] · x[i]
+     x[k] ← s
+  returnează x, det</code></pre>
+</section>
+
+<section id="l2">
+  <h2>L2. Mediu de programare în pagină (JavaScript)</h2>
+  <p>Poți scrie și rula cod direct aici. Folosește <code>console.log(...)</code> pentru afișare. Alege un șablon, modifică-l și apasă <span class="kbd">Rulează</span>.</p>
+  <div class="lab">
+    <div class="ctr"><label class="c">Șablon<select id="cd_t"></select></label><button class="pri" id="cd_run">▶ Rulează</button><button id="cd_reset">Reîncarcă șablonul</button></div>
+    <textarea class="code" id="cd_src" spellcheck="false"></textarea>
+    <div class="small" style="margin:6px 0">Ieșire:</div>
+    <div class="console" id="cd_out"></div>
+  </div>
+</section>
+
+<section id="l3">
+  <h2>L3. Implementări de referință în Python și C++</h2>
+  <h4>Python</h4>
+<pre><code>def gauss(A, b, pivotare=True):
+    n = len(A)
+    M = [row[:] + [b[i]] for i, row in enumerate(A)]   # matricea extinsa
+    det = 1.0
+    for k in range(n):
+        p = k
+        if pivotare:
+            p = max(range(k, n), key=lambda i: abs(M[i][k]))
+        elif M[k][k] == 0:
+            p = next((i for i in range(k + 1, n) if M[i][k] != 0), k)
+        if M[p][k] == 0:
+            raise ValueError("Matrice singulara: det = 0")
+        if p != k:
+            M[k], M[p] = M[p], M[k]
+            det = -det
+        piv = M[k][k]
+        det *= piv
+        for j in range(k, n + 1):          # linia pivot
+            M[k][j] /= piv
+        for i in range(k + 1, n):          # liniile nepivot
+            f = M[i][k]
+            for j in range(k, n + 1):
+                M[i][j] -= f * M[k][j]
+    x = [0.0] * n                          # substitutia inversa
+    for k in range(n - 1, -1, -1):
+        x[k] = M[k][n] - sum(M[k][i] * x[i] for i in range(k + 1, n))
+    return x, det
+
+A = [[2, 1, -1], [-3, -1, 2], [-2, 1, 2]]
+b = [8, -11, -3]
+print(gauss(A, b))      # ([2.0, 3.0, -1.0], -1.0)
+
+# Verificare cu NumPy (daca este instalat):
+# import numpy as np; print(np.linalg.solve(A, b), np.linalg.det(A))</code></pre>
+  <h4>C++</h4>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;cmath&gt;
+#include &lt;stdexcept&gt;
+using namespace std;
+using Mat = vector&lt;vector&lt;double&gt;&gt;;
+
+vector&lt;double&gt; gauss(Mat A, vector&lt;double&gt; b, double&amp; det) {
+    int n = A.size();
+    det = 1.0;
+    for (int k = 0; k &lt; n; ++k) {
+        int p = k;                                     // pivotare partiala
+        for (int i = k + 1; i &lt; n; ++i)
+            if (fabs(A[i][k]) &gt; fabs(A[p][k])) p = i;
+        if (fabs(A[p][k]) &lt; 1e-14) throw runtime_error("Matrice singulara");
+        if (p != k) { swap(A[p], A[k]); swap(b[p], b[k]); det = -det; }
+        double piv = A[k][k];
+        det *= piv;
+        for (int j = k; j &lt; n; ++j) A[k][j] /= piv;    // linia pivot
+        b[k] /= piv;
+        for (int i = k + 1; i &lt; n; ++i) {              // linii nepivot
+            double f = A[i][k];
+            for (int j = k; j &lt; n; ++j) A[i][j] -= f * A[k][j];
+            b[i] -= f * b[k];
+        }
+    }
+    vector&lt;double&gt; x(n);
+    for (int k = n - 1; k &gt;= 0; --k) {                 // substitutie inversa
+        double s = b[k];
+        for (int i = k + 1; i &lt; n; ++i) s -= A[k][i] * x[i];
+        x[k] = s;
+    }
+    return x;
+}
+
+int main() {
+    Mat A = {{2, 1, -1}, {-3, -1, 2}, {-2, 1, 2}};
+    vector&lt;double&gt; b = {8, -11, -3};
+    double det;
+    vector&lt;double&gt; x = gauss(A, b, det);
+    for (int i = 0; i &lt; (int)x.size(); ++i) cout &lt;&lt; "x" &lt;&lt; i + 1 &lt;&lt; " = " &lt;&lt; x[i] &lt;&lt; "\n";
+    cout &lt;&lt; "det = " &lt;&lt; det &lt;&lt; "\n";
+}</code></pre>
+</section>
+
+<section id="l4">
+  <h2>L4. Teme de laborator (progresive)</h2>
+  <table class="data">
+    <tr><th>#</th><th>Sarcina</th><th>Nivel</th><th>Criteriu de reușită</th></tr>
+    <tr><td>T1</td><td>Implementați substituția inversă pentru un sistem superior triunghiular (șablonul „T1” din mediul JS).</td><td><span class="lvl l1">N1</span></td><td>x = (1, 2, 3) pentru exemplul din secțiunea 5</td></tr>
+    <tr><td>T2</td><td>Implementați eliminarea Gauss clasică (fără pivotare, cu pivoți aduși la 1), conform formulelor din curs.</td><td><span class="lvl l1">N1</span></td><td>x = (2, 3, −1) pentru exemplul din curs</td></tr>
+    <tr><td>T3</td><td>Adăugați tratarea pivotului nul prin interschimbare de linii și detectarea matricei singulare.</td><td><span class="lvl l2">N2</span></td><td>exemplul S6 dă (1, 1, 2); sistemele singulare dau mesaj</td></tr>
+    <tr><td>T4</td><td>Calculați determinantul ca produs al pivoților (cu semn pentru interschimbări).</td><td><span class="lvl l2">N2</span></td><td>det = 3 pentru matricea S4</td></tr>
+    <tr><td>T5</td><td>Implementați metoda Cramer folosind funcția de determinant de la T4.</td><td><span class="lvl l2">N2</span></td><td>aceeași soluție ca la Gauss</td></tr>
+    <tr><td>T6</td><td>Calculați reziduul <span class="f">r = B - A X</span> și norma lui <span class="f">\max |r_i|</span>.</td><td><span class="lvl l2">N2</span></td><td>reziduu ~10⁻¹⁵ pentru sisteme bine condiționate</td></tr>
+    <tr><td>T7</td><td>Măsurați timpul pentru n = 100, 200, 400, 800 (matrice aleatoare). Verificați că dublarea lui n înmulțește timpul cu ≈ 8 (șablonul „T7”).</td><td><span class="lvl l3">N3</span></td><td>raport între 6 și 10</td></tr>
+    <tr><td>T8</td><td>Comparați Cramer vs Gauss ca timp pentru n = 50, 100, 200.</td><td><span class="lvl l3">N3</span></td><td>raport ≈ n + 1</td></tr>
+    <tr><td>T9</td><td>Implementați pivotarea parțială și rulați experimentul cu ε (secțiunea 12) și Hilbert (L5).</td><td><span class="lvl l3">N3</span></td><td>soluția corectă pentru ε = 10⁻²⁰</td></tr>
+    <tr><td>T10</td><td>Provocare: Gauss-Jordan pentru calculul inversei <span class="f">A^{-1}</span>; verificați <span class="f">A \cdot A^{-1} = I</span>.</td><td><span class="lvl l3">N3</span></td><td>eroare max ~10⁻¹⁵</td></tr>
+  </table>
+</section>
+
+<section id="l5">
+  <h2>L5. Experiment: matricea Hilbert (sistem prost condiționat) <span class="lvl l3">Nivel 3</span></h2>
+  <p>Matricea Hilbert are <span class="f">h_{ij} = \frac{1}{i + j - 1}</span>. Construim B = H·(1, 1, …, 1), deci soluția exactă este X = (1, 1, …, 1). Rezolvăm cu Gauss în double (cu pivotare parțială) și măsurăm eroarea.</p>
+  <div class="lab">
+    <div class="lt">🧪 Eroarea crește exploziv cu n</div>
+    <div class="ctr"><label class="c">n = <b id="hb_nv">8</b><input type="range" id="hb_n" min="2" max="14" value="8"></label></div>
+    <div id="hb_x" class="small"></div>
+    <div class="scroll" id="hb_tab"></div>
+  </div>
+  <div class="box idea"><strong>Ce observăm?</strong> Reziduul <span class="f">\max |B - AX|</span> rămâne mic (~10⁻¹⁶), dar eroarea în soluție crește până la ordinul unităților sau mai mult. Algoritmul nu e de vină — sistemul însuși amplifică erorile de rotunjire. Asta arată de ce, în practică, verificăm nu doar reziduul, ci și condiționarea problemei.</div>
+</section>
+
+<div class="part">Evaluare</div>
+
+<section id="quiz">
+  <h2>Test de autoevaluare</h2>
+  <p>Alege câte un răspuns la fiecare întrebare, apoi apasă „Verifică”.</p>
+  <div class="quiz" id="qz"></div>
+  <div class="ctr"><button class="pri" id="qz_go">Verifică răspunsurile</button><button id="qz_reset">Reia testul</button></div>
+  <div class="out" id="qz_res" hidden></div>
+</section>
+
+<section id="fisa">
+  <h2>Fișă de sinteză</h2>
+  <div class="grid2">
+    <div class="card"><b>Metode</b><ul class="small"><li>Directe: Cramer, Gauss, Gauss-Jordan, Crout — număr finit de pași, erori de rotunjire.</li><li>Iterative: Jacobi, Gauss-Seidel, relaxare — limită de șir, erori de rotunjire + trunchiere.</li></ul></div>
+    <div class="card"><b>Matrice</b><ul class="small"><li>Inferior: <span class="f">l_{ij} = 0, j &gt; i</span></li><li>Superior: <span class="f">u_{ij} = 0, j &lt; i</span></li><li>Diagonală: <span class="f">d_{ij} = 0, j \ne i</span></li><li>Produs/inversă păstrează tipul.</li></ul></div>
+    <div class="card"><b>Gauss — pasul k</b><ul class="small"><li>Linia pivot: <span class="f">a_{kj}^{(k)} = a_{kj}^{(k-1)}/a_{kk}^{(k-1)}</span></li><li>Nepivot: <span class="f">a_{ij}^{(k)} = a_{ij}^{(k-1)} - a_{ik}^{(k-1)} a_{kj}^{(k)}</span></li><li>Se modifică doar blocul de la linia k și coloana k încolo.</li></ul></div>
+    <div class="card"><b>Substituție inversă</b><ul class="small"><li><span class="f">x_n = b_n^{(n)}</span></li><li><span class="f">x_k = b_k^{(k)} - \sum_{i&gt;k} a_{ki}^{(k)} x_i</span></li></ul></div>
+    <div class="card"><b>Determinant</b><ul class="small"><li><span class="f">\det A = (-1)^s a_{11}^{(0)} a_{22}^{(1)} ... a_{nn}^{(n-1)}</span></li><li>s = numărul de interschimbări de linii.</li></ul></div>
+    <div class="card"><b>Cramer &amp; cost</b><ul class="small"><li><span class="f">x_i = \Delta_i / \Delta</span>, <span class="f">\Delta \ne 0</span></li><li>n+1 determinanți de ordin n.</li><li>Gauss: <span class="f">\approx \frac{2}{3} n^3</span> operații, <span class="f">O(n^3)</span>.</li><li>Folosește pivotarea parțială!</li></ul></div>
+  </div>
+</section>
+
+<footer>Material de curs, seminar și laborator · Capitolul 4 — Rezolvarea sistemelor de ecuații liniare (Curs 6)</footer>
+</main>
+</div>
+
+<script>
+"use strict";
+/* ================= mini-TeX renderer ================= */
+const SYM={cdot:'·',ne:'≠',le:'≤',ge:'≥',to:'→',in:'∈',forall:'∀',ldots:'…',dots:'…',Delta:'Δ',lambda:'λ',varepsilon:'ε',epsilon:'ε',sum:'∑',det:'det',approx:'≈',times:'×',infty:'∞',pm:'±',leftarrow:'←',leftrightarrow:'↔',Rightarrow:'⇒',Leftrightarrow:'⇔',sigma:'σ',alpha:'α',max:'max'};
+function escH(c){return c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':c==='-'?'−':c;}
+function tx(s){
+  let i=0;
+  function group(){
+    if(s[i]==='{'){i++;const o=seq('}');i++;return o;}
+    if(s[i]==='\\')return cmd();
+    const c=s[i++]||'';return /[a-zA-Z]/.test(c)?'<i>'+c+'</i>':escH(c);
+  }
+  function seq(end){let o='';while(i<s.length&&s[i]!==end)o+=atom();return o;}
+  function atom(){
+    let base;const c=s[i];
+    if(c==='\\')base=cmd();
+    else if(c==='{'){i++;base=seq('}');i++;}
+    else if(c==='_'||c==='^')base='';
+    else{i++;base=/[a-zA-Z]/.test(c)?'<i>'+c+'</i>':escH(c);}
+    let sub=null,sup=null;
+    while(s[i]==='_'||s[i]==='^'){const t=s[i];i++;const g=group();if(t==='_')sub=g;else sup=g;}
+    if(sub!==null&&sup!==null)return base+'<span class="ss"><span>'+sup+'</span><span>'+sub+'</span></span>';
+    if(sub!==null)return base+'<sub>'+sub+'</sub>';
+    if(sup!==null)return base+'<sup>'+sup+'</sup>';
+    return base;
+  }
+  function cmd(){
+    i++;let name='';
+    while(i<s.length&&/[a-zA-Z]/.test(s[i]))name+=s[i++];
+    if(!name){const c=s[i++];return c===','?'&thinsp;':escH(c);}
+    if(name==='frac'){const a=group(),b=group();return '<span class="fr"><span>'+a+'</span><span>'+b+'</span></span>';}
+    if(name==='text'||name==='mathrm'){if(s[i]==='{'){i++;let t='';while(i<s.length&&s[i]!=='}')t+=s[i++];i++;return t;}return '';}
+    return SYM[name]!==undefined?SYM[name]:name;
+  }
+  return seq(undefined);
+}
+function renderTex(root){(root||document).querySelectorAll('.f:not([data-t]),.F:not([data-t])').forEach(e=>{e.innerHTML=tx(e.textContent);e.dataset.t='1';});}
+
+/* ================= Exact fractions ================= */
+const gcd=(a,b)=>{a=a<0n?-a:a;b=b<0n?-b:b;while(b){[a,b]=[b,a%b];}return a;};
+class Fr{
+  constructor(n,d=1n){n=BigInt(n);d=BigInt(d);if(d===0n)throw new Error('Împărțire la zero');if(d<0n){n=-n;d=-d;}const g=gcd(n,d)||1n;this.n=n/g;this.d=d/g;}
+  add(o){return new Fr(this.n*o.d+o.n*this.d,this.d*o.d);}
+  sub(o){return new Fr(this.n*o.d-o.n*this.d,this.d*o.d);}
+  mul(o){return new Fr(this.n*o.n,this.d*o.d);}
+  div(o){if(o.n===0n)throw new Error('Împărțire la zero');return new Fr(this.n*o.d,this.d*o.n);}
+  neg(){return new Fr(-this.n,this.d);}
+  isZero(){return this.n===0n;}
+  num(){return Number(this.n)/Number(this.d);}
+  str(){return this.d===1n?String(this.n):this.n+'/'+this.d;}
+  html(){if(this.d===1n)return String(this.n).replace('-','−');const neg=this.n<0n;const a=neg?-this.n:this.n;return (neg?'−':'')+'<span class="fr"><span>'+a+'</span><span>'+this.d+'</span></span>';}
+  static parse(str){
+    str=String(str).trim().replace(/−/g,'-').replace(',','.');
+    if(str==='')return new Fr(0);
+    if(str.includes('/')){const p=str.split('/');if(p.length!==2)throw new Error('Valoare invalidă: '+str);return Fr.parse(p[0]).div(Fr.parse(p[1]));}
+    const m=str.match(/^([-+]?)(\d*)(?:\.(\d*))?$/);
+    if(!m||(m[2]===''&&(m[3]||'')===''))throw new Error('Valoare invalidă: „'+str+'”');
+    const dec=m[3]||'';let n=BigInt((m[2]||'0')+dec);if(m[1]==='-')n=-n;
+    return new Fr(n,10n**BigInt(dec.length));
+  }
+}
+function fmtF(x){if(x===0||Object.is(x,-0))return '0';if(!isFinite(x))return String(x);const a=Math.abs(x);let s=(a<1e-4||a>=1e7)?x.toExponential(4):String(+x.toPrecision(7));return s.replace('-','−');}
+const EXACT={parse:s=>Fr.parse(s),add:(a,b)=>a.add(b),sub:(a,b)=>a.sub(b),mul:(a,b)=>a.mul(b),div:(a,b)=>a.div(b),isZero:a=>a.isZero(),abs:a=>Math.abs(a.num()),neg:a=>a.neg(),one:()=>new Fr(1),zero:()=>new Fr(0),html:a=>a.html(),num:a=>a.num()};
+const FLOAT={parse:s=>{s=String(s).trim().replace(/−/g,'-').replace(',','.');if(s==='')return 0;let v;if(s.includes('/')){const p=s.split('/');v=Number(p[0])/Number(p[1]);}else v=Number(s);if(!isFinite(v))throw new Error('Valoare invalidă: „'+s+'”');return v;},
+  add:(a,b)=>a+b,sub:(a,b)=>a-b,mul:(a,b)=>a*b,div:(a,b)=>a/b,isZero:a=>a===0,abs:Math.abs,neg:a=>-a,one:()=>1,zero:()=>0,html:fmtF,num:a=>a};
+const $=id=>document.getElementById(id);
+const sub=k=>String(k).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+
+/* ================= static matrices ================= */
+function mxTable(rows,opts={}){
+  const n=rows.length;let h='<table class="mx"><tbody>';
+  rows.forEach((r,i)=>{h+='<tr>';r.forEach((v,j)=>{let cls=[];
+    if(opts.hl){const isz=(typeof v==='string'?v.trim()==='0':false);
+      if(opts.hl==='lower'){if(j>i)cls.push('z');else cls.push('nz');}
+      if(opts.hl==='upper'){if(j<i)cls.push('z');else cls.push('nz');}
+      if(opts.hl==='diag'){if(i!==j)cls.push('z');else cls.push('dg');}}
+    if(opts.aug&&j===r.length-1)cls.push('sep');
+    if(opts.col!=null&&j===opts.col)cls.push('tg');
+    h+='<td class="'+cls.join(' ')+'">'+v+'</td>';});h+='</tr>';});
+  return h+'</tbody></table>';
+}
+function renderStatic(){
+  document.querySelectorAll('.mx[data-m]').forEach(e=>{
+    const rows=e.dataset.m.split(';').map(r=>r.split(',').map(v=>{v=v.trim();if(/^[-\d./]+$/.test(v)){try{return Fr.parse(v).html();}catch(_){return v;}}return '<i>'+v+'</i>';}));
+    const t=document.createElement('span');t.innerHTML=mxTable(rows,{hl:e.dataset.hl,aug:e.dataset.aug});
+    e.replaceWith(t.firstChild);
+  });
+  // general step-k matrix
+  const g=[["1","a_{12}^{(1)}","…","a_{1k}^{(1)}","a_{1,k+1}^{(1)}","…","a_{1n}^{(1)}","b_1^{(1)}"],
+    ["0","1","…","a_{2k}^{(2)}","a_{2,k+1}^{(2)}","…","a_{2n}^{(2)}","b_2^{(2)}"],
+    ["…","…","…","…","…","…","…","…"],
+    ["0","0","…","1","a_{k,k+1}^{(k)}","…","a_{kn}^{(k)}","b_k^{(k)}"],
+    ["0","0","…","0","a_{k+1,k+1}^{(k)}","…","a_{k+1,n}^{(k)}","b_{k+1}^{(k)}"],
+    ["…","…","…","…","…","…","…","…"],
+    ["0","0","…","0","a_{n,k+1}^{(k)}","…","a_{nn}^{(k)}","b_n^{(k)}"]];
+  let h='<tbody>';g.forEach((r,i)=>{h+='<tr>';r.forEach((v,j)=>{let c=[];if(j===7)c.push('sep');if(i>=4&&j>=4&&i!==5&&j!==5)c.push('reg');if(i===5||j===5)c.push('');if((i===4||i===6)&&j===3)c.push('z');h+='<td class="'+c.join(' ')+'">'+tx(v)+'</td>';});h+='</tr>';});
+  $('genk').outerHTML='<table class="mx" style="font-size:14px">'+h+'</tbody></table>';
+}
+
+/* ================= Gauss engine ================= */
+function runGauss(A,b,F,mode){
+  const n=A.length;const M=A.map((r,i)=>[...r,b[i]]);const steps=[];const snap=()=>M.map(r=>r.slice());const H=F.html;
+  let det=F.one(),swaps=0;const piv=[];const partial=mode==='partial';const gj=mode==='gj';
+  steps.push({M:snap(),title:'Matricea extinsă inițială [A | B]',desc:`Sistem cu ${n} ecuații și ${n} necunoscute. Vom face ${n} pași de eliminare${gj?' (Gauss-Jordan: eliminăm atât sub, cât și deasupra pivotului)':', apoi substituția inversă'}.`,hl:{}});
+  for(let k=0;k<n;k++){
+    let p=k;
+    if(partial){for(let r=k+1;r<n;r++)if(F.abs(M[r][k])>F.abs(M[p][k]))p=r;}
+    else if(F.isZero(M[k][k])){for(let r=k+1;r<n;r++)if(!F.isZero(M[r][k])){p=r;break;}}
+    if(F.isZero(M[p][k])){
+      steps.push({M:snap(),title:`Pasul ${k+1}: nu există pivot nenul în coloana ${k+1}`,desc:`Toate elementele din coloana ${k+1}, de la linia ${k+1} în jos, sunt 0. Deci <b>det A = 0</b> și sistemul nu are soluție unică. Vezi analiza de rang de mai jos.`,hl:{region:k,col:k}});
+      return {steps,singular:true,n,det:F.zero(),M};
+    }
+    if(p!==k){[M[p],M[k]]=[M[k],M[p]];swaps++;
+      steps.push({M:snap(),title:`Pasul ${k+1}: interschimbăm L${sub(k+1)} ↔ L${sub(p+1)}`,desc:partial?`Pivotare parțială: cel mai mare element în modul din coloana ${k+1} (liniile ${k+1}…${n}) este ${H(M[k][k])}, pe linia ${p+1}. Interschimbarea schimbă semnul determinantului.`:`Pivotul de pe poziția (${k+1},${k+1}) este 0 și nu putem împărți la el. Prima linie de sub el cu element nenul în coloana ${k+1} este linia ${p+1}. Interschimbarea schimbă semnul determinantului.`,hl:{swap:[k,p],region:k}});}
+    const pv=M[k][k];piv.push(pv);det=F.mul(det,pv);
+    const before=M[k].slice();
+    for(let j=k+1;j<=n;j++)M[k][j]=F.div(M[k][j],pv);M[k][k]=F.one();
+    const jj=k+1<n?k+1:n;
+    steps.push({M:snap(),title:`Pasul ${k+1}: împărțim linia pivot L${sub(k+1)} la pivotul ${H(pv)}`,desc:`Pivotul este a${sub(k+1)}${sub(k+1)}<sup>(${k})</sup> = ${H(pv)}. Fiecare element al liniei se împarte la el; pe diagonală apare 1. De exemplu: ${H(before[jj])} ÷ ${H(pv)} = ${H(M[k][jj])}. Determinantul acumulat (produsul pivoților): ${H(det)}.`,hl:{pivotRow:k,pivot:[k,k],region:k,target:k}});
+    const rows=[];for(let i=0;i<n;i++){if(gj?i!==k:i>k)rows.push(i);}
+    for(const i of rows){
+      const f=M[i][k];
+      if(F.isZero(f)){steps.push({M:snap(),title:`L${sub(i+1)}: deja are 0 în coloana ${k+1}`,desc:'Nu este nevoie de nicio operație pe această linie.',hl:{pivotRow:k,target:i,region:gj?null:k}});continue;}
+      const old=M[i].slice();
+      for(let j=k+1;j<=n;j++)M[i][j]=F.sub(M[i][j],F.mul(f,M[k][j]));M[i][k]=F.zero();
+      steps.push({M:snap(),title:`L${sub(i+1)} ← L${sub(i+1)} − (${H(f)})·L${sub(k+1)}`,desc:`Factorul este chiar elementul vechi a${sub(i+1)}${sub(k+1)} = ${H(f)} (pivotul a fost adus la 1). Regula dreptunghiului, de exemplu pentru coloana ${jj===n?'B':jj+1}: ${H(old[jj])} − (${H(f)})·(${H(M[k][jj])}) = <b>${H(M[i][jj])}</b>. În coloana ${k+1} obținem 0.`,hl:{pivotRow:k,target:i,region:gj?null:k}});
+    }
+  }
+  if(swaps%2)det=F.neg(det);
+  const pivList=piv.map(H).join(' · ');
+  steps.push({M:snap(),title:gj?'Matricea A a devenit matricea unitate':'Matricea este superior triunghiulară, cu 1 pe diagonală',desc:`Faza de eliminare s-a încheiat. Determinant: det A = ${swaps%2?'(−1) · ':''}${pivList} = <b>${H(det)}</b>${swaps?` (${swaps} interschimbăr${swaps===1?'e':'i'})`:''}.`,hl:{}});
+  const x=new Array(n).fill(undefined);
+  if(gj){for(let k=0;k<n;k++)x[k]=M[k][n];steps.push({M:snap(),title:'Citim soluția direct din coloana B',desc:'La Gauss-Jordan nu mai este nevoie de substituție inversă.',hl:{},x:x.slice()});}
+  else{
+    for(let k=n-1;k>=0;k--){
+      let s=M[k][n];const parts=[];
+      for(let i=k+1;i<n;i++){parts.push(`(${H(M[k][i])})·(${H(x[i])})`);s=F.sub(s,F.mul(M[k][i],x[i]));}
+      x[k]=s;
+      steps.push({M:snap(),title:`Substituție inversă: x${sub(k+1)}`,desc:k===n-1?`Ultima ecuație are o singură necunoscută: x${sub(n)} = b${sub(n)} = <b>${H(x[k])}</b>.`:`x${sub(k+1)} = b${sub(k+1)} − ∑ a${sub(k+1)}ᵢ·xᵢ = ${H(M[k][n])} − [${parts.join(' + ')}] = <b>${H(x[k])}</b>`,hl:{backRow:k},x:x.slice()});
+    }
+  }
+  return {steps,x,det,n,singular:false,swaps,piv};
+}
+function rankOf(rows,F){
+  const M=rows.map(r=>r.slice());const m=M.length,c=M[0].length;let r=0;
+  for(let col=0;col<c&&r<m;col++){
+    let p=-1,best=0;for(let i=r;i<m;i++){const a=F.abs(M[i][col]);if(!F.isZero(M[i][col])&&a>best){best=a;p=i;}}
+    if(p<0)continue;[M[p],M[r]]=[M[r],M[p]];
+    for(let i=r+1;i<m;i++){const f=F.div(M[i][col],M[r][col]);for(let j=col;j<c;j++)M[i][j]=F.sub(M[i][j],F.mul(f,M[r][j]));}
+    r++;
+  }
+  return r;
+}
+function detOf(A,F){const n=A.length;const r=runGauss(A,new Array(n).fill(F.zero()),F,'classic');return r.singular?F.zero():r.det;}
+
+function stepMatrix(st,F,n){
+  const M=st.M,hl=st.hl||{};let h='<table class="mx"><thead><tr><th class="rl"></th>';
+  for(let j=0;j<n;j++)h+='<th>x'+sub(j+1)+'</th>';h+='<th class="sep">B</th></tr></thead><tbody>';
+  for(let r=0;r<n;r++){
+    h+='<tr><td class="rl">L'+sub(r+1)+'</td>';
+    for(let c=0;c<=n;c++){
+      const cl=[];
+      if(hl.region!=null&&r>=hl.region&&c>=hl.region)cl.push('reg');
+      if(hl.pivotRow===r)cl.push('prow');
+      if(hl.target===r)cl.push('tg');
+      if(hl.backRow===r)cl.push('tg');
+      if(hl.swap&&hl.swap.includes(r))cl.push('sw');
+      if(hl.pivot&&hl.pivot[0]===r&&hl.pivot[1]===c)cl.push('pv');
+      if(c<n&&c!==r&&F.isZero(M[r][c])&&(c<r||(hl.region==null&&false)))cl.push('z');
+      if(c===n)cl.push('sep');
+      h+='<td class="'+cl.join(' ')+'">'+F.html(M[r][c])+'</td>';
+    }
+    h+='</tr>';
+  }
+  return h+'</tbody></table>';
+}
+
+/* ================= story (worked example) ================= */
+function buildStory(){
+  const A=[[2,1,-1],[-3,-1,2],[-2,1,2]].map(r=>r.map(v=>new Fr(v)));const b=[8,-11,-3].map(v=>new Fr(v));
+  const r=runGauss(A,b,EXACT,'classic');let h='';
+  r.steps.forEach((s,i)=>{h+=`<div class="card"><div class="small"><b>${i+1}. ${s.title}</b></div><div class="scroll">${stepMatrix(s,EXACT,3)}</div>${s.x?'<div class="chips">'+s.x.map((v,j)=>`<span class="chip ${v!==undefined?'known':''}">x${sub(j+1)} = ${v!==undefined?v.html():'?'}</span>`).join('')+'</div>':''}</div>`;});
+  $('story').innerHTML=h;
+}
+
+/* ================= Gauss stepper UI ================= */
+const PRESETS={
+  curs:{name:'Exemplul din curs (3×3)',A:[[2,1,-1],[-3,-1,2],[-2,1,2]],b:[8,-11,-3]},
+  s2:{name:'Sistem 2×2 simplu (S2)',A:[[1,2],[3,4]],b:[5,11]},
+  s3:{name:'Seminar S3 (3×3)',A:[[1,1,1],[2,3,1],[1,-1,2]],b:[6,11,5]},
+  zero:{name:'Pivot nul (necesită interschimbare)',A:[[0,1,1],[1,1,1],[2,1,3]],b:[3,4,9]},
+  s4:{name:'Sistem 4×4 (S4)',A:[[1,2,0,1],[2,5,1,3],[0,1,3,2],[1,3,2,4]],b:[4,11,6,10]},
+  frac:{name:'Coeficienți fracționari',A:[['1/2','1/3'],['1/4','1']],b:['7/6','9/4']},
+  inc:{name:'Singular — incompatibil',A:[[1,1,1],[2,2,2],[1,-1,1]],b:[1,3,0]},
+  ned:{name:'Singular — nedeterminat',A:[[1,1,1],[2,2,2],[1,-1,1]],b:[3,6,1]},
+  eps:{name:'Pivot mic ε = 10⁻¹⁷ (alege virgulă mobilă)',A:[['1e-17',1],[1,1]],b:[1,2]}
+};
+function inputGrid(container,n,withB,vals){
+  let h=`<div class="ingrid" style="grid-template-columns:repeat(${n+(withB?1:0)},auto)">`;
+  for(let j=0;j<n;j++)h+=`<div class="hd">x${sub(j+1)}</div>`;if(withB)h+='<div class="hd">B</div>';
+  for(let i=0;i<n;i++){for(let j=0;j<n+(withB?1:0);j++){const v=vals&&vals[i]&&vals[i][j]!==undefined?vals[i][j]:'0';h+=`<input type="text" data-i="${i}" data-j="${j}" value="${v}" class="${withB&&j===n?'bcol':''}">`;}}
+  container.innerHTML=h+'</div>';
+}
+function readGrid(container,n,withB,F){
+  const A=[],b=[];
+  for(let i=0;i<n;i++){A.push([]);for(let j=0;j<n;j++)A[i].push(F.parse(container.querySelector(`input[data-i="${i}"][data-j="${j}"]`).value));if(withB)b.push(F.parse(container.querySelector(`input[data-i="${i}"][data-j="${n}"]`).value));}
+  return {A,b};
+}
+function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function randomSystem(n){
+  for(let t=0;t<200;t++){
+    const A=[...Array(n)].map(()=>[...Array(n)].map(()=>randInt(-5,5)));
+    if(detOf(A.map(r=>r.map(v=>new Fr(v))),EXACT).isZero())continue;
+    const x=[...Array(n)].map(()=>randInt(-4,5));
+    const b=A.map(r=>r.reduce((s,v,j)=>s+v*x[j],0));
+    return {A,b};
+  }
+}
+const GS={res:null,i:0,F:EXACT,timer:null,orig:null};
+function gsSetInputs(A,b){const n=A.length;$('gs_n').value=n;inputGrid($('gs_in'),n,true,A.map((r,i)=>[...r,b[i]]));}
+function gsRun(){
+  $('gs_err').textContent='';stopPlay();
+  const n=+$('gs_n').value;const F=$('gs_ar').value==='exact'?EXACT:FLOAT;
+  let A,b;
+  try{({A,b}=readGrid($('gs_in'),n,true,F));}catch(e){$('gs_err').textContent=e.message+(F===EXACT&&/e/i.test(e.message)?' — pentru notație științifică (1e-17) alege „virgulă mobilă”.':'');return;}
+  GS.F=F;GS.orig={A,b};
+  try{GS.res=runGauss(A,b,F,$('gs_mode').value);}catch(e){$('gs_err').textContent=e.message;return;}
+  GS.i=0;$('gs_view').hidden=false;
+  $('gs_list').innerHTML=GS.res.steps.map((s,i)=>`<li data-i="${i}">${s.title}</li>`).join('');
+  gsShow();
+  // summary
+  const r=GS.res,H=F.html;let sm='';
+  if(r.singular){
+    const rA=rankOf(A,F),rAb=rankOf(A.map((row,i)=>[...row,b[i]]),F);
+    sm=`<b>Sistem singular</b> (det A = 0). rang A = ${rA}, rang [A|B] = ${rAb} ⇒ `+(rA<rAb?'<span class="msg-bad">sistem INCOMPATIBIL (nicio soluție)</span>':`<span class="msg-ok">sistem COMPATIBIL NEDETERMINAT (o infinitate de soluții, ${n-rA} necunoscut${n-rA===1?'ă':'e'} secundar${n-rA===1?'ă':'e'})</span>`);
+  }else{
+    const resid=A.map((row,i)=>{let s=F.zero();row.forEach((v,j)=>s=F.add(s,F.mul(v,r.x[j])));return F.sub(b[i],s);});
+    const maxr=Math.max(...resid.map(v=>F.abs(v)));
+    sm=`<b>Soluția:</b> ${r.x.map((v,j)=>`x${sub(j+1)} = ${H(v)}`).join(', ')}. <b>det A</b> = ${H(r.det)}. <b>Verificare</b> (reziduul max |B − A·X|): ${F===EXACT?(maxr===0?'<span class="msg-ok">0 exact ✓</span>':fmtF(maxr)):fmtF(maxr)}.`;
+  }
+  $('gs_sum').innerHTML=sm;
+}
+function gsShow(){
+  const r=GS.res,s=r.steps[GS.i];
+  $('gs_title').textContent=s.title;$('gs_desc').innerHTML=s.desc;renderTex($('gs_desc'));
+  $('gs_mat').innerHTML=stepMatrix(s,GS.F,r.n);
+  const x=s.x||new Array(r.n).fill(undefined);
+  $('gs_x').innerHTML=r.singular?'':x.map((v,j)=>`<span class="chip ${v!==undefined?'known':''}">x${sub(j+1)} = ${v!==undefined?GS.F.html(v):'?'}</span>`).join('');
+  $('gs_cnt').textContent=`Pasul ${GS.i+1} din ${r.steps.length}`;
+  $('gs_bar').style.width=((GS.i+1)/r.steps.length*100)+'%';
+  $('gs_list').querySelectorAll('li').forEach((li,i)=>li.classList.toggle('cur',i===GS.i));
+  const cur=$('gs_list').querySelector('li.cur');if(cur){const box=cur.closest('.steplist');box.scrollTop=cur.offsetTop-box.clientHeight/2;}
+  $('gs_prev').disabled=GS.i===0;$('gs_next').disabled=GS.i===r.steps.length-1;
+}
+function stopPlay(){if(GS.timer){clearInterval(GS.timer);GS.timer=null;$('gs_play').textContent='⏵ Redare automată';}}
+function initGS(){
+  const sel=$('gs_preset');sel.innerHTML=Object.entries(PRESETS).map(([k,p])=>`<option value="${k}">${p.name}</option>`).join('');
+  const load=k=>{const p=PRESETS[k];sel.value=k;gsSetInputs(p.A,p.b);if(k==='eps'){$('gs_ar').value='float';}};
+  sel.onchange=()=>{load(sel.value);gsRun();};
+  $('gs_n').onchange=()=>{const n=+$('gs_n').value;const s=randomSystem(n);gsSetInputs(s.A,s.b);};
+  $('gs_rand').onclick=()=>{const s=randomSystem(+$('gs_n').value);gsSetInputs(s.A,s.b);gsRun();};
+  $('gs_run').onclick=gsRun;
+  $('gs_next').onclick=()=>{if(GS.i<GS.res.steps.length-1){GS.i++;gsShow();}};
+  $('gs_prev').onclick=()=>{if(GS.i>0){GS.i--;gsShow();}};
+  $('gs_first').onclick=()=>{GS.i=0;gsShow();};
+  $('gs_last').onclick=()=>{GS.i=GS.res.steps.length-1;gsShow();};
+  $('gs_list').onclick=e=>{const li=e.target.closest('li');if(li){GS.i=+li.dataset.i;gsShow();}};
+  $('gs_play').onclick=()=>{if(GS.timer){stopPlay();return;}$('gs_play').textContent='⏸ Pauză';GS.timer=setInterval(()=>{if(GS.i<GS.res.steps.length-1){GS.i++;gsShow();}else stopPlay();},1500);};
+  ['gs_ar','gs_mode'].forEach(id=>$(id).onchange=gsRun);
+  document.querySelectorAll('[data-load]').forEach(bt=>bt.onclick=()=>{load(bt.dataset.load);$('gs_ar').value='exact';gsRun();$('c7').scrollIntoView();});
+  load('curs');gsRun();
+}
+
+/* ================= geometry 2D ================= */
+function initGeo(){
+  const ids=['g_a1','g_b1','g_c1','g_a2','g_b2','g_c2'];const cv=$('g_cv'),ctx=cv.getContext('2d');
+  const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  function draw(){
+    const [a1,b1,c1,a2,b2,c2]=ids.map(id=>parseFloat($(id).value)||0);
+    const W=cv.width,Hh=cv.height,R=8,sx=x=>W/2+x*W/(2*R)*0.98,sy=y=>Hh/2-y*Hh/(2*R)*0.98*W/Hh*Hh/W*(W/Hh)*(Hh/W)*1;
+    const scale=Math.min(W,Hh)/(2*R),X=x=>W/2+x*scale,Y=y=>Hh/2-y*scale;
+    ctx.clearRect(0,0,W,Hh);ctx.fillStyle=css('--panel');ctx.fillRect(0,0,W,Hh);
+    ctx.strokeStyle=css('--line');ctx.lineWidth=1;
+    for(let k=-20;k<=20;k++){ctx.beginPath();ctx.moveTo(X(k),0);ctx.lineTo(X(k),Hh);ctx.stroke();ctx.beginPath();ctx.moveTo(0,Y(k));ctx.lineTo(W,Y(k));ctx.stroke();}
+    ctx.strokeStyle=css('--muted');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,Y(0));ctx.lineTo(W,Y(0));ctx.moveTo(X(0),0);ctx.lineTo(X(0),Hh);ctx.stroke();
+    ctx.fillStyle=css('--muted');ctx.font='12px sans-serif';ctx.fillText('x',W-14,Y(0)-6);ctx.fillText('y',X(0)+6,12);
+    function line(a,b,c,col,dash){ctx.save();ctx.strokeStyle=col;ctx.lineWidth=3;ctx.setLineDash(dash||[]);ctx.beginPath();
+      if(Math.abs(b)>1e-12){const xa=-30,xb=30;ctx.moveTo(X(xa),Y((c-a*xa)/b));ctx.lineTo(X(xb),Y((c-a*xb)/b));}
+      else if(Math.abs(a)>1e-12){ctx.moveTo(X(c/a),0);ctx.lineTo(X(c/a),Hh);}
+      ctx.stroke();ctx.restore();}
+    line(a1,b1,c1,'#2f5bea');line(a2,b2,c2,'#0e9f6e');
+    const D=a1*b2-a2*b1;let txt='';
+    if(Math.abs(D)>1e-12){const x=(c1*b2-c2*b1)/D,y=(a1*c2-a2*c1)/D;
+      ctx.fillStyle='#dc2626';ctx.beginPath();ctx.arc(X(x),Y(y),6,0,7);ctx.fill();ctx.fillStyle=css('--ink');ctx.font='bold 13px sans-serif';ctx.fillText(`(${fmtF(x)}, ${fmtF(y)})`,X(x)+9,Y(y)-9);
+      txt=`<span class="msg-ok">Δ = a₁₁a₂₂ − a₁₂a₂₁ = ${fmtF(D)} ≠ 0 ⇒ drepte concurente, soluție unică: x = ${fmtF(x)}, y = ${fmtF(y)}</span>`;}
+    else{const prop=Math.abs(a1*c2-a2*c1)<1e-12&&Math.abs(b1*c2-b2*c1)<1e-12;txt=prop?'<span class="msg-ok">Δ = 0 și ecuațiile sunt proporționale ⇒ drepte confundate: o infinitate de soluții.</span>':'<span class="msg-bad">Δ = 0, dar termenii liberi nu sunt proporționali ⇒ drepte paralele: nicio soluție.</span>';}
+    if($('g_elim').checked){
+      if(Math.abs(a1)>1e-12){const f=a2/a1;const nb=b2-f*b1,nc=c2-f*c1;line(0,nb,nc,'#c2410c',[8,6]);txt+=`<br>După eliminare: L₂ ← L₂ − (${fmtF(f)})·L₁ ⇒ <b>0·x + ${fmtF(nb)}·y = ${fmtF(nc)}</b> (linia portocalie punctată).`;}
+      else txt+='<br>a₁₁ = 0: ar trebui întâi interschimbate ecuațiile.';
+    }
+    ctx.font='13px sans-serif';ctx.fillStyle='#2f5bea';ctx.fillText('ecuația 1',10,18);ctx.fillStyle='#0e9f6e';ctx.fillText('ecuația 2',10,36);
+    $('g_out').innerHTML=txt;
+  }
+  ids.forEach(id=>$(id).oninput=draw);$('g_elim').onchange=draw;
+  document.querySelectorAll('[data-g]').forEach(bt=>bt.onclick=()=>{bt.dataset.g.split(',').forEach((v,i)=>$(ids[i]).value=v);draw();});
+  draw();
+}
+
+/* ================= classifier ================= */
+function initCls(){
+  const P={lower:[[3,0,0,0],[1,2,0,0],[4,-1,5,0],[2,6,1,7]],upper:[[3,1,4,2],[0,2,-1,6],[0,0,5,1],[0,0,0,7]],diag:[[3,0,0,0],[0,2,0,0],[0,0,5,0],[0,0,0,7]],full:[[3,1,4,2],[1,2,-1,6],[4,0,5,1],[2,6,1,7]]};
+  const g=$('cls_grid');
+  function build(m){let h='<div class="ingrid" style="grid-template-columns:repeat(4,auto)">';m.forEach((r,i)=>r.forEach((v,j)=>h+=`<input type="text" data-i="${i}" data-j="${j}" value="${v}">`));g.innerHTML=h+'</div>';g.querySelectorAll('input').forEach(e=>e.oninput=check);check();}
+  function check(){
+    const M=[...Array(4)].map((_,i)=>[...Array(4)].map((_,j)=>{const v=parseFloat(g.querySelector(`input[data-i="${i}"][data-j="${j}"]`).value);return isNaN(v)?0:v;}));
+    let lo=true,up=true;for(let i=0;i<4;i++)for(let j=0;j<4;j++){if(j>i&&M[i][j]!==0)lo=false;if(j<i&&M[i][j]!==0)up=false;}
+    g.querySelectorAll('input').forEach(e=>{const i=+e.dataset.i,j=+e.dataset.j;e.style.background=i===j?'var(--piv)':(j>i?(lo?'var(--zero)':'var(--bad-soft)'):(up?'var(--zero)':'var(--accent-soft)'));});
+    let t;if(lo&&up)t='<b>Diagonală</b> (este simultan inferior și superior triunghiulară).';else if(lo)t='<b>Inferior triunghiulară</b>: toate elementele cu j > i sunt 0.';else if(up)t='<b>Superior triunghiulară</b>: toate elementele cu j < i sunt 0.';else t='<b>Niciunul dintre tipuri</b>: există elemente nenule și deasupra, și sub diagonală (colorate).';
+    const d=M[0][0]*M[1][1]*M[2][2]*M[3][3];if(lo||up)t+=` Determinantul = produsul diagonalei = ${fmtF(d)}${d===0?' ⇒ matricea NU este inversabilă':' ⇒ inversabilă'}.`;
+    $('cls_out').innerHTML=t;
+  }
+  document.querySelectorAll('[data-c]').forEach(bt=>bt.onclick=()=>build(P[bt.dataset.c]));
+  build(P.lower);
+}
+
+/* ================= product / inverse demo ================= */
+function matMul(A,B){return A.map(r=>B[0].map((_,j)=>r.reduce((s,v,k)=>s.add(v.mul(B[k][j])),new Fr(0))));}
+function inverse(A){
+  const n=A.length;const M=A.map((r,i)=>[...r,...[...Array(n)].map((_,j)=>new Fr(i===j?1:0))]);
+  for(let k=0;k<n;k++){let p=k;while(p<n&&M[p][k].isZero())p++;if(p===n)return null;[M[p],M[k]]=[M[k],M[p]];const pv=M[k][k];for(let j=0;j<2*n;j++)M[k][j]=M[k][j].div(pv);
+    for(let i=0;i<n;i++)if(i!==k){const f=M[i][k];for(let j=0;j<2*n;j++)M[i][j]=M[i][j].sub(f.mul(M[k][j]));}}
+  return M.map(r=>r.slice(n));
+}
+function initProd(){
+  $('prod_go').onclick=()=>{
+    const t=$('prod_t').value;const gen=()=>[...Array(3)].map((_,i)=>[...Array(3)].map((_,j)=>{const ok=t==='lower'?j<=i:j>=i;if(!ok)return new Fr(0);let v=randInt(-4,5);if(i===j&&v===0)v=2;return new Fr(v);}));
+    const L1=gen(),L2=gen(),P=matMul(L1,L2),I=inverse(L1);
+    const h=m=>mxTable(m.map(r=>r.map(v=>v.html())),{hl:t});
+    $('prod_out').innerHTML=`<div class="mxwrap">${h(L1)} · ${h(L2)} = ${h(P)}</div><p class="small">Zerourile (gri) rămân pe aceleași poziții în produs ⇒ Prop. 1a. Diagonala produsului = produsul diagonalelor: ${P.map((r,i)=>r[i].html()).join(', ')}.</p><div class="mxwrap">Inversa primei matrice: ${h(L1)}<sup>−1</sup> = ${I?h(I):'—'}</div><p class="small">Inversa are aceeași formă triunghiulară ⇒ Prop. 1b.</p>`;
+  };
+  $('prod_go').click();
+}
+
+/* ================= elementary transformations ================= */
+function eqHTML(row){
+  const n=row.length-1;let s='';let first=true;
+  for(let j=0;j<n;j++){const v=row[j];if(v.isZero())continue;const neg=v.n<0n;const a=neg?v.neg():v;const coef=(a.n===1n&&a.d===1n)?'':a.html();
+    s+=(first?(neg?'−':''):(neg?' − ':' + '))+coef+'<i>x</i>'+sub(j+1);first=false;}
+  if(first)s='0';return s+' = '+row[n].html();
+}
+function initET(){
+  const A0=[[2,1,-1],[-3,-1,2],[-2,1,2]],b0=[8,-11,-3];let M,log;
+  function reset(){M=A0.map((r,i)=>[...r,b0[i]].map(v=>new Fr(v)));log=[];show();}
+  function show(){
+    $('et_sys').innerHTML='<div class="sys">'+M.map((r,i)=>`<div><span class="small">L${sub(i+1)}:</span> ${eqHTML(r)}</div>`).join('')+'</div>';
+    const A=M.map(r=>r.slice(0,3)),b=M.map(r=>r[3]);const r=runGauss(A,b,EXACT,'partial');
+    $('et_out').innerHTML=r.singular?'Sistem singular.':`Soluția sistemului curent: <b>${r.x.map((v,j)=>'x'+sub(j+1)+' = '+v.html()).join(', ')}</b> · det A curent = <b>${r.det.html()}</b> (inițial: −1)`;
+    $('et_log').innerHTML=log.length?'Istoric: '+log.join(' → '):'';
+  }
+  $('et_go').onclick=()=>{
+    const op=$('et_op').value,i=+$('et_i').value-1,j=+$('et_j').value-1;let l;
+    try{l=Fr.parse($('et_l').value);}catch(e){$('et_out').innerHTML='<span class="msg-bad">'+e.message+'</span>';return;}
+    if(op==='swap'){if(i===j)return;[M[i],M[j]]=[M[j],M[i]];log.push(`L${sub(i+1)}↔L${sub(j+1)} (det × −1)`);}
+    else if(op==='mul'){if(l.isZero()){$('et_out').innerHTML='<span class="msg-bad">λ = 0 nu este permis: nu ar fi o transformare elementară (pierdem ecuația).</span>';return;}M[i]=M[i].map(v=>v.mul(l));log.push(`L${sub(i+1)}←${l.str()}·L${sub(i+1)} (det × ${l.str()})`);}
+    else{if(i===j){$('et_out').innerHTML='<span class="msg-bad">Alege i ≠ j.</span>';return;}M[i]=M[i].map((v,c)=>v.add(l.mul(M[j][c])));log.push(`L${sub(i+1)}←L${sub(i+1)}+${l.str()}·L${sub(j+1)} (det neschimbat)`);}
+    show();
+  };
+  $('et_reset').onclick=reset;reset();
+}
+
+/* ================= back substitution animation ================= */
+function initBS(){
+  const U=[[2,-1,3,9],[0,4,-1,5],[0,0,3,9]];let k=0;
+  const steps=[
+    {row:-1,x:[null,null,null],t:'Sistem superior triunghiular. Începem cu ultima ecuație (de jos).'},
+    {row:2,x:[null,null,3],t:'Linia 3: 3x₃ = 9 ⇒ x₃ = 9 / 3 = <b>3</b>'},
+    {row:1,x:[null,2,3],t:'Linia 2: 4x₂ − x₃ = 5 ⇒ x₂ = (5 + 1·3) / 4 = 8/4 = <b>2</b> (folosim x₃ deja aflat)'},
+    {row:0,x:[1,2,3],t:'Linia 1: 2x₁ − x₂ + 3x₃ = 9 ⇒ x₁ = (9 + 1·2 − 3·3) / 2 = 2/2 = <b>1</b>'},
+    {row:-1,x:[1,2,3],t:'<span class="msg-ok">Gata! X = (1, 2, 3). Am făcut doar 3 împărțiri, 3 înmulțiri și 3 adunări/scăderi.</span>'}];
+  function show(){const s=steps[k];let h='<table class="mx"><thead><tr><th>x₁</th><th>x₂</th><th>x₃</th><th class="sep">B</th></tr></thead><tbody>';
+    U.forEach((r,i)=>{h+='<tr>'+r.map((v,j)=>{const c=[];if(j===3)c.push('sep');if(i===s.row)c.push('tg');if(j<3&&j>i&&i===s.row&&s.x[j]!==null)c.push('pv');if(j<i)c.push('z');return `<td class="${c.join(' ')}">${String(v).replace('-','−')}</td>`;}).join('')+'</tr>';});
+    h+='</tbody></table><div class="chips">'+s.x.map((v,j)=>`<span class="chip ${v!==null?'known':''}">x${sub(j+1)} = ${v===null?'?':v}</span>`).join('')+'</div><div class="out">'+s.t+'</div>';
+    $('bs_view').innerHTML=h;$('bs_prev').disabled=k===0;$('bs_next').disabled=k===steps.length-1;}
+  $('bs_next').onclick=()=>{k++;show();};$('bs_prev').onclick=()=>{k--;show();};$('bs_reset').onclick=()=>{k=0;show();};show();
+}
+
+/* ================= determinant calculator ================= */
+function initDT(){
+  const build=n=>{const A=[...Array(n)].map(()=>[...Array(n)].map(()=>randInt(-4,5)));inputGrid($('dt_in'),n,false,A);};
+  $('dt_n').onchange=()=>build(+$('dt_n').value);$('dt_rand').onclick=()=>build(+$('dt_n').value);
+  $('dt_go').onclick=()=>{
+    const n=+$('dt_n').value;let A;try{A=readGrid($('dt_in'),n,false,EXACT).A;}catch(e){$('dt_out').innerHTML='<span class="msg-bad">'+e.message+'</span>';return;}
+    const r=runGauss(A,new Array(n).fill(new Fr(0)),EXACT,'classic');
+    if(r.singular){$('dt_out').innerHTML='<div class="out">La un pas nu s-a găsit pivot nenul ⇒ <b>det = 0</b>.</div>';return;}
+    const last=r.steps.find(s=>/superior/.test(s.title));
+    $('dt_out').innerHTML=`<div class="out">Pivoții: ${r.piv.map(v=>v.html()).join(' , ')} · interschimbări: ${r.swaps}<br><b>det = ${r.swaps%2?'(−1)·':''}${r.piv.map(v=>'('+v.html()+')').join('·')} = ${r.det.html()}</b></div><div class="small">Matricea după eliminare (fără coloana B):</div>`+mxTable(last.M.map(row=>row.slice(0,n).map(v=>v.html())),{hl:'upper'});
+  };
+  build(3);
+}
+
+/* ================= Cramer ================= */
+function initCR(){
+  const def={2:[[2,3,8],[1,-1,-1]],3:[[2,-1,1,3],[1,1,1,6],[3,1,-1,2]],4:[[1,2,0,1,4],[2,5,1,3,11],[0,1,3,2,6],[1,3,2,4,10]]};
+  const build=(n,vals)=>inputGrid($('cr_in'),n,true,vals||def[n]);
+  $('cr_n').onchange=()=>build(+$('cr_n').value);
+  $('cr_rand').onclick=()=>{const n=+$('cr_n').value;const s=randomSystem(n);build(n,s.A.map((r,i)=>[...r,s.b[i]]));};
+  $('cr_go').onclick=()=>{
+    const n=+$('cr_n').value;let A,b;try{({A,b}=readGrid($('cr_in'),n,true,EXACT));}catch(e){$('cr_out').innerHTML='<span class="msg-bad">'+e.message+'</span>';return;}
+    const D=detOf(A,EXACT);
+    const sarrus=M=>{if(M.length!==3)return '';const a=M;const t=[a[0][0].mul(a[1][1]).mul(a[2][2]),a[0][1].mul(a[1][2]).mul(a[2][0]),a[0][2].mul(a[1][0]).mul(a[2][1])],u=[a[0][2].mul(a[1][1]).mul(a[2][0]),a[0][0].mul(a[1][2]).mul(a[2][1]),a[0][1].mul(a[1][0]).mul(a[2][2])];
+      return '<div class="small">Sarrus: '+t.map(v=>'('+v.html()+')').join(' + ')+' − ['+u.map(v=>'('+v.html()+')').join(' + ')+']</div>';};
+    const tw=M=>M.length===2?`<div class="small">${M[0][0].html()}·(${M[1][1].html()}) − (${M[0][1].html()})·(${M[1][0].html()})</div>`:'';
+    let h=`<div class="grid2"><div class="card"><b>Δ = det A</b>${mxTable(A.map(r=>r.map(v=>v.html())))}${sarrus(A)}${tw(A)}<div>Δ = <b>${D.html()}</b></div></div>`;
+    if(D.isZero()){$('cr_out').innerHTML=h+'</div><div class="out msg-bad">Δ = 0 ⇒ metoda Cramer nu se poate aplica (sistemul nu are soluție unică).</div>';return;}
+    const xs=[];
+    for(let i=0;i<n;i++){const Ai=A.map((r,k)=>r.map((v,j)=>j===i?b[k]:v));const Di=detOf(Ai,EXACT);xs.push(Di.div(D));
+      h+=`<div class="card"><b>Δ${sub(i+1)}</b> (coloana ${i+1} ← B)${mxTable(Ai.map(r=>r.map(v=>v.html())),{col:i})}${sarrus(Ai)}${tw(Ai)}<div>Δ${sub(i+1)} = <b>${Di.html()}</b> ⇒ x${sub(i+1)} = ${Di.html()} / ${D.html()} = <b>${xs[i].html()}</b></div></div>`;}
+    h+='</div><div class="out msg-ok">Soluția: '+xs.map((v,j)=>'x'+sub(j+1)+' = '+v.html()).join(', ')+` — s-au calculat ${n+1} determinanți de ordin ${n}.</div>`;
+    $('cr_out').innerHTML=h;
+  };
+  build(3);$('cr_go').click();
+}
+
+/* ================= complexity ================= */
+function gaussOps(n){return (n**3+3*n**2-n)/3+(n**3-n)/3+n*(n-1)/2;}
+function detGaussOps(n){let s=n-1;for(let k=1;k<=n;k++){const m=n-k;s+=m+2*m*m;}return s;}
+function laplaceOps(n){let L=0;for(let k=2;k<=n;k++)L=k*(L+1)+(k-1);return L;}
+function fmtTime(ops){const s=ops/1e9;if(s<1e-6)return (s*1e9).toFixed(0)+' ns';if(s<1e-3)return (s*1e6).toFixed(1)+' µs';if(s<1)return (s*1e3).toFixed(1)+' ms';if(s<60)return s.toFixed(1)+' s';if(s<3600)return (s/60).toFixed(1)+' min';if(s<86400)return (s/3600).toFixed(1)+' ore';if(s<3.156e7)return (s/86400).toFixed(1)+' zile';const y=s/3.156e7;return (y<1e6?y.toFixed(0):y.toExponential(1))+' ani';}
+function initCX(){
+  const cv=$('cx_cv'),ctx=cv.getContext('2d');
+  function draw(){
+    const N=+$('cx_n').value;$('cx_nv').textContent=N;
+    const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const S=[{name:'Gauss',c:'#0e9f6e',f:gaussOps},{name:'Cramer (det. prin eliminare)',c:'#2f5bea',f:n=>(n+1)*detGaussOps(n)+n},{name:'Cramer (det. prin dezvoltare Laplace)',c:'#dc2626',f:n=>(n+1)*laplaceOps(n)+n}];
+    const W=cv.width,H=cv.height,pl=60,pr=20,pt=20,pb=40;
+    let maxv=0;S.forEach(s=>{for(let n=1;n<=N;n++)maxv=Math.max(maxv,s.f(n));});
+    const top=Math.ceil(Math.log10(maxv+1));
+    const X=n=>pl+(n-1)/(N-1)*(W-pl-pr),Y=v=>H-pb-(Math.log10(Math.max(v,1))/top)*(H-pt-pb);
+    ctx.clearRect(0,0,W,H);ctx.fillStyle=css('--panel');ctx.fillRect(0,0,W,H);
+    ctx.font='11px sans-serif';
+    for(let e=0;e<=top;e+=Math.max(1,Math.ceil(top/10))){ctx.strokeStyle=css('--line');ctx.beginPath();ctx.moveTo(pl,Y(10**e));ctx.lineTo(W-pr,Y(10**e));ctx.stroke();ctx.fillStyle=css('--muted');ctx.fillText('10^'+e,8,Y(10**e)+4);}
+    for(let n=1;n<=N;n+=Math.max(1,Math.round(N/12))){ctx.fillStyle=css('--muted');ctx.fillText(n,X(n)-4,H-pb+16);}
+    ctx.fillText('n',W-pr-8,H-6);
+    S.forEach((s,k)=>{ctx.strokeStyle=s.c;ctx.lineWidth=2.5;ctx.beginPath();for(let n=1;n<=N;n++){const x=X(n),y=Y(s.f(n));n===1?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();
+      ctx.fillStyle=s.c;ctx.fillRect(pl+10,pt+k*18,12,12);ctx.fillStyle=css('--ink');ctx.font='12px sans-serif';ctx.fillText(s.name,pl+28,pt+k*18+10);});
+    const ns=[2,3,5,10,15,20,25].filter(n=>n<=N);
+    let h='<table class="data"><tr><th>n</th><th>Gauss (operații)</th><th>timp</th><th>Cramer + eliminare</th><th>timp</th><th>Cramer + Laplace</th><th>timp</th></tr>';
+    ns.forEach(n=>{const g=gaussOps(n),c1=(n+1)*detGaussOps(n)+n,c2=(n+1)*laplaceOps(n)+n;const f=v=>v<1e7?Math.round(v).toLocaleString('ro-RO'):v.toExponential(2);h+=`<tr><td>${n}</td><td>${f(g)}</td><td>${fmtTime(g)}</td><td>${f(c1)}</td><td>${fmtTime(c1)}</td><td>${f(c2)}</td><td>${fmtTime(c2)}</td></tr>`;});
+    $('cx_tab').innerHTML=h+'</table>';
+  }
+  $('cx_n').oninput=draw;draw();
+}
+
+/* ================= rounding demo ================= */
+function solveFloat(A,b,partial){
+  const n=A.length;const M=A.map((r,i)=>[...r,b[i]]);
+  for(let k=0;k<n;k++){let p=k;if(partial){for(let i=k+1;i<n;i++)if(Math.abs(M[i][k])>Math.abs(M[p][k]))p=i;}else if(M[k][k]===0){for(let i=k+1;i<n;i++)if(M[i][k]!==0){p=i;break;}}
+    [M[p],M[k]]=[M[k],M[p]];const pv=M[k][k];for(let j=k;j<=n;j++)M[k][j]/=pv;
+    for(let i=k+1;i<n;i++){const f=M[i][k];for(let j=k;j<=n;j++)M[i][j]-=f*M[k][j];}}
+  const x=new Array(n).fill(0);for(let k=n-1;k>=0;k--){let s=M[k][n];for(let i=k+1;i<n;i++)s-=M[k][i]*x[i];x[k]=s;}return x;
+}
+function initRD(){
+  $('r_ex').textContent=String(0.1+0.2);
+  function draw(){const e=+$('rd_s').value;$('rd_e').textContent='−'+e;const eps=Math.pow(10,-e);
+    const A=[[eps,1],[1,1]],b=[1,2];const x1=solveFloat(A,b,false),x2=solveFloat(A,b,true);const ex=[1/(1-eps),(1-2*eps)/(1-eps)];
+    const err=x=>Math.max(Math.abs(x[0]-ex[0]),Math.abs(x[1]-ex[1]));
+    const cl=x=>err(x)>1e-6?'msg-bad':'msg-ok';
+    $('rd_out').innerHTML=`<table class="data"><tr><th>Metodă</th><th>x₁</th><th>x₂</th><th>eroare max</th></tr>
+    <tr><td>Exact (teoretic)</td><td>${ex[0].toPrecision(17)}</td><td>${ex[1].toPrecision(17)}</td><td>—</td></tr>
+    <tr><td>Gauss fără pivotare (pivot ε)</td><td class="${cl(x1)}">${x1[0].toPrecision(17)}</td><td>${x1[1].toPrecision(17)}</td><td class="${cl(x1)}">${err(x1).toExponential(2)}</td></tr>
+    <tr><td>Gauss cu pivotare parțială (pivot 1)</td><td class="${cl(x2)}">${x2[0].toPrecision(17)}</td><td>${x2[1].toPrecision(17)}</td><td class="${cl(x2)}">${err(x2).toExponential(2)}</td></tr></table>
+    <p class="small">Fără pivotare: după împărțirea la ε, linia 2 devine (1 − 1/ε)·x₂ = 2 − 1/ε. Pentru ε mic, 1 și 2 sunt „înghițite” de 1/ε la rotunjire, iar x₁ = 1/ε − x₂/ε pierde toate cifrele corecte.</p>`;}
+  $('rd_s').oninput=draw;draw();
+}
+
+/* ================= Hilbert ================= */
+function initHB(){
+  const run=n=>{const H=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>1/(i+j+1)));const b=H.map(r=>r.reduce((s,v)=>s+v,0));const x=solveFloat(H,b,true);
+    const err=Math.max(...x.map(v=>Math.abs(v-1)));const res=Math.max(...H.map((r,i)=>Math.abs(b[i]-r.reduce((s,v,j)=>s+v*x[j],0))));return {x,err,res};};
+  let h='<table class="data"><tr><th>n</th><th>eroare max |xᵢ − 1|</th><th>reziduu max |B − HX|</th><th>cifre corecte ≈</th></tr>';
+  for(let n=2;n<=14;n++){const r=run(n);const dig=Math.max(0,-Math.log10(r.err||1e-17));h+=`<tr><td>${n}</td><td class="${r.err>1e-3?'msg-bad':''}">${r.err.toExponential(2)}</td><td>${r.res.toExponential(2)}</td><td>${dig.toFixed(1)}</td></tr>`;}
+  $('hb_tab').innerHTML=h+'</table>';
+  const show=()=>{const n=+$('hb_n').value;$('hb_nv').textContent=n;const r=run(n);$('hb_x').innerHTML='<b>X calculat</b> (ar trebui să fie numai 1): '+r.x.map(v=>v.toPrecision(8)).join(', ');};
+  $('hb_n').oninput=show;show();
+}
+
+/* ================= LU (Crout) ================= */
+function initLU(){
+  const A=[[2,1,-1],[-3,-1,2],[-2,1,2]].map(r=>r.map(v=>new Fr(v)));const n=3;
+  const L=[...Array(n)].map(()=>[...Array(n)].map(()=>new Fr(0))),U=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>new Fr(i===j?1:0)));
+  for(let j=0;j<n;j++){for(let i=j;i<n;i++){let s=A[i][j];for(let k=0;k<j;k++)s=s.sub(L[i][k].mul(U[k][j]));L[i][j]=s;}
+    for(let i=j+1;i<n;i++){let s=A[j][i];for(let k=0;k<j;k++)s=s.sub(L[j][k].mul(U[k][i]));U[j][i]=s.div(L[j][j]);}}
+  const P=matMul(L,U);const h=(m,t)=>mxTable(m.map(r=>r.map(v=>v.html())),{hl:t});
+  $('lu_out').innerHTML=`<div class="mxwrap">A = ${h(A)} = L · U = ${h(L,'lower')} · ${h(U,'upper')}</div>
+  <p class="small">Observă: diagonala lui L conține exact <b>pivoții</b> din Gauss (2, 1/2, −1), coloanele lui L conțin valorile <span class="f">a_{ik}^{(k-1)}</span> folosite ca factori, iar U este exact matricea finală <span class="f">A^{(n)}</span> din eliminare. Verificare L·U: ${P.every((r,i)=>r.every((v,j)=>v.sub(A[i][j]).isZero()))?'<span class="msg-ok">= A ✓</span>':'eroare'}. det A = produsul diagonalei lui L = ${L.reduce((s,r,i)=>s.mul(r[i]),new Fr(1)).html()}.</p>`;
+  renderTex($('lu_out'));
+}
+
+/* ================= code runner ================= */
+const TPL={
+'Gauss complet (pivotare parțială)':`function gauss(A, b) {
+  const n = A.length;
+  const M = A.map((row, i) => [...row, b[i]]);   // matricea extinsă
+  let det = 1;
+  for (let k = 0; k < n; k++) {
+    // pivotare parțială
+    let p = k;
+    for (let i = k + 1; i < n; i++)
+      if (Math.abs(M[i][k]) > Math.abs(M[p][k])) p = i;
+    if (Math.abs(M[p][k]) < 1e-14) throw new Error("Matrice singulară (det = 0)");
+    if (p !== k) { [M[p], M[k]] = [M[k], M[p]]; det = -det; }
+    const piv = M[k][k];
+    det *= piv;
+    for (let j = k; j <= n; j++) M[k][j] /= piv;          // linia pivot
+    for (let i = k + 1; i < n; i++) {                     // linii nepivot
+      const f = M[i][k];
+      for (let j = k; j <= n; j++) M[i][j] -= f * M[k][j];
+    }
+  }
+  const x = new Array(n).fill(0);                         // substituție inversă
+  for (let k = n - 1; k >= 0; k--) {
+    let s = M[k][n];
+    for (let i = k + 1; i < n; i++) s -= M[k][i] * x[i];
+    x[k] = s;
+  }
+  return { x, det };
+}
+
+const A = [[2, 1, -1], [-3, -1, 2], [-2, 1, 2]];
+const b = [8, -11, -3];
+const r = gauss(A, b);
+console.log("x =", r.x);
+console.log("det =", r.det);
+`,
+'T1 — substituția inversă (de completat)':`// U este superior triunghiulară; rezolvă U·x = b de jos în sus.
+function backSubst(U, b) {
+  const n = U.length;
+  const x = new Array(n).fill(0);
+  for (let k = n - 1; k >= 0; k--) {
+    let s = b[k];
+    // TODO: scade suma U[k][i]*x[i] pentru i = k+1 .. n-1
+    // TODO: împarte la U[k][k]
+    x[k] = s; // <- modifică
+  }
+  return x;
+}
+console.log(backSubst([[2, -1, 3], [0, 4, -1], [0, 0, 3]], [9, 5, 9])); // așteptat [1, 2, 3]
+`,
+'Cramer cu determinanți prin eliminare':`function det(A) {
+  const n = A.length, M = A.map(r => r.slice());
+  let d = 1;
+  for (let k = 0; k < n; k++) {
+    let p = k;
+    for (let i = k + 1; i < n; i++) if (Math.abs(M[i][k]) > Math.abs(M[p][k])) p = i;
+    if (Math.abs(M[p][k]) < 1e-14) return 0;
+    if (p !== k) { [M[p], M[k]] = [M[k], M[p]]; d = -d; }
+    d *= M[k][k];
+    for (let i = k + 1; i < n; i++) {
+      const f = M[i][k] / M[k][k];
+      for (let j = k; j < n; j++) M[i][j] -= f * M[k][j];
+    }
+  }
+  return d;
+}
+function cramer(A, b) {
+  const D = det(A);
+  if (Math.abs(D) < 1e-14) throw new Error("Δ = 0");
+  return A.map((_, i) => det(A.map((row, k) => row.map((v, j) => j === i ? b[k] : v))) / D);
+}
+console.log(cramer([[2, -1, 1], [1, 1, 1], [3, 1, -1]], [3, 6, 2])); // [1, 2, 3]
+`,
+'T7 — măsurarea timpului O(n³)':`function gaussSolve(A, b) {
+  const n = A.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let k = 0; k < n; k++) {
+    let p = k;
+    for (let i = k + 1; i < n; i++) if (Math.abs(M[i][k]) > Math.abs(M[p][k])) p = i;
+    [M[p], M[k]] = [M[k], M[p]];
+    const piv = M[k][k];
+    for (let j = k; j <= n; j++) M[k][j] /= piv;
+    for (let i = k + 1; i < n; i++) { const f = M[i][k]; for (let j = k; j <= n; j++) M[i][j] -= f * M[k][j]; }
+  }
+  const x = new Array(n).fill(0);
+  for (let k = n - 1; k >= 0; k--) { let s = M[k][n]; for (let i = k + 1; i < n; i++) s -= M[k][i] * x[i]; x[k] = s; }
+  return x;
+}
+let prev = null;
+for (const n of [100, 200, 400]) {
+  const A = Array.from({ length: n }, () => Array.from({ length: n }, () => Math.random()));
+  const b = Array.from({ length: n }, () => Math.random());
+  const t0 = performance.now();
+  gaussSolve(A, b);
+  const t = performance.now() - t0;
+  console.log("n =", n, " timp =", t.toFixed(1), "ms", prev ? " raport = " + (t / prev).toFixed(1) : "");
+  prev = t;
+}
+console.log("Teoretic, raportul la dublarea lui n este 2^3 = 8.");
+`,
+'T6 — reziduul și verificarea':`const A = [[1, 1, 1], [2, 3, 1], [1, -1, 2]];
+const b = [6, 11, 5];
+const x = [1, 2, 3];                 // înlocuiește cu soluția calculată de tine
+const r = A.map((row, i) => b[i] - row.reduce((s, v, j) => s + v * x[j], 0));
+console.log("reziduu r = B - A·x =", r);
+console.log("max |r_i| =", Math.max(...r.map(Math.abs)));
+`};
+function initCode(){
+  const sel=$('cd_t');sel.innerHTML=Object.keys(TPL).map(k=>`<option>${k}</option>`).join('');
+  const load=()=>{$('cd_src').value=TPL[sel.value];$('cd_out').textContent='';};sel.onchange=load;$('cd_reset').onclick=load;
+  $('cd_src').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const t=e.target,s=t.selectionStart;t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+2;}});
+  $('cd_run').onclick=()=>{
+    const out=[];const fmt=a=>typeof a==='string'?a:(()=>{try{return JSON.stringify(a,(k,v)=>typeof v==='number'?+v.toPrecision(15):v);}catch(_){return String(a);}})();
+    const con={log:(...a)=>out.push(a.map(fmt).join(' ')),error:(...a)=>out.push('Eroare: '+a.map(fmt).join(' ')),warn:(...a)=>out.push(a.map(fmt).join(' '))};
+    try{new Function('console',$('cd_src').value)(con);}catch(e){out.push('⚠ '+e.name+': '+e.message);}
+    $('cd_out').textContent=out.join('\n')||'(nicio ieșire — folosește console.log)';
+  };
+  load();
+}
+
+/* ================= quiz ================= */
+const QZ=[
+ ['Care dintre următoarele este o metodă DIRECTĂ?',['Jacobi','Gauss-Seidel','Eliminarea Gauss','Relaxarea'],2,'Gauss dă soluția într-un număr finit de pași; celelalte sunt iterative.'],
+ ['Ce erori apar la metodele iterative?',['Doar de rotunjire','Doar de trunchiere','De rotunjire și de trunchiere','Niciuna'],2,'Pe lângă rotunjire, oprirea după un număr finit de iterații introduce eroare de trunchiere.'],
+ ['O matrice U este superior triunghiulară dacă:',['u_ij = 0 pentru j < i','u_ij = 0 pentru j > i','u_ij = 0 pentru i ≠ j','u_ii = 1'],0,'Zerourile sunt sub diagonală, unde coloana j este mai mică decât linia i.'],
+ ['Care operație NU este transformare elementară?',['L₁ ↔ L₃','L₂ ← L₂ + L₁','L₂ ← 0·L₂','L₃ ← 5·L₃'],2,'Înmulțirea cu 0 nu e inversabilă: se pierde o ecuație.'],
+ ['În varianta din curs, după pasul k, elementul a_kk^(k) este:',['0','1','pivotul a_kk^(k−1)','det A'],1,'Linia pivot se împarte la pivot, deci pe diagonală apare 1.'],
+ ['Formula corectă pentru liniile nepivot este:',['a_ij^(k) = a_ij^(k−1) − a_ik^(k−1)·a_kj^(k)','a_ij^(k) = a_ij^(k−1) / a_kk^(k−1)','a_ij^(k) = a_ik^(k−1)·a_kj^(k)','a_ij^(k) = a_ij^(k−1) + a_kk^(k−1)'],0,'Regula dreptunghiului: vechi − (coloana pivot) × (linia pivot nouă).'],
+ ['La eliminarea unui sistem 3×3, pivoții au fost 2, 1/2, −1, fără interschimbări. det A = ?',['1','−1','3/2','−2'],1,'det A = 2 · 1/2 · (−1) = −1.'],
+ ['Interschimbarea a două linii modifică determinantul astfel:',['nu îl modifică','îl dublează','îi schimbă semnul','îl anulează'],2,'Fiecare interschimbare înmulțește det cu −1.'],
+ ['Metoda Cramer pentru un sistem 10×10 necesită calculul a:',['10 determinanți','11 determinanți de ordin 10','10! determinanți','100 de determinanți'],1,'n + 1 determinanți: Δ și Δ₁…Δₙ.'],
+ ['Complexitatea metodei eliminării Gauss este:',['O(n)','O(n²)','O(n³)','O(n!)'],2,'Aproximativ ⅔n³ operații aritmetice.'],
+ ['Dacă la pasul k pivotul e 0, dar sub el există un element nenul:',['sistemul este incompatibil','interschimbăm liniile și continuăm','oprim algoritmul: det = 0','înmulțim linia cu 0'],1,'Transformarea 3 (comutarea liniilor) rezolvă problema fără a schimba soluția.'],
+ ['De ce se folosește pivotarea parțială?',['Reduce numărul de operații la O(n²)','Reduce efectul erorilor de rotunjire','Elimină erorile de trunchiere','E obligatorie la Cramer'],1,'Evită împărțirea la pivoți mici, care amplifică erorile.'],
+ ['Dacă dublezi n, timpul eliminării Gauss crește de aproximativ:',['2 ori','4 ori','8 ori','16 ori'],2,'(2n)³ = 8n³.'],
+ ['O linie de forma [0 0 0 | 5] apărută în eliminare înseamnă:',['soluție unică','infinitate de soluții','sistem incompatibil','det A = 5'],2,'Ecuația 0 = 5 este imposibilă.']
+];
+function initQuiz(){
+  const box=$('qz');
+  box.innerHTML=QZ.map((q,i)=>`<div class="q" id="q${i}"><b>${i+1}. ${q[0]}</b>${q[1].map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join('')}<div class="fb"></div></div>`).join('');
+  $('qz_go').onclick=()=>{let ok=0;QZ.forEach((q,i)=>{const e=$('q'+i),c=e.querySelector('input:checked');const fb=e.querySelector('.fb');e.classList.remove('right','wrong');
+      if(c&&+c.value===q[2]){ok++;e.classList.add('right');fb.innerHTML='✓ Corect. '+q[3];}else{e.classList.add('wrong');fb.innerHTML='✗ Răspuns corect: <b>'+q[1][q[2]]+'</b>. '+q[3];}fb.style.display='block';});
+    const p=Math.round(ok/QZ.length*100);const r=$('qz_res');r.hidden=false;
+    r.innerHTML=`<b>Scor: ${ok} / ${QZ.length} (${p}%)</b> — `+(p>=90?'Excelent! Ai atins nivelul maxim.':p>=70?'Foarte bine. Recitește secțiunile la care ai greșit.':p>=50?'Bine, dar mai exersează cu simulatorul și seminarul.':'Reia cursul de la secțiunile marcate Nivel 1 și 2.');};
+  $('qz_reset').onclick=()=>{initQuiz();$('qz_res').hidden=true;};
+}
+
+/* ================= misc ================= */
+function initCopy(){document.querySelectorAll('pre').forEach(p=>{const b=document.createElement('button');b.className='copy';b.textContent='Copiază';b.onclick=()=>{const t=p.querySelector('code').innerText;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='Copiat ✓';setTimeout(()=>b.textContent='Copiază',1500);}).catch(()=>{b.textContent='Selectează manual';});};p.appendChild(b);});}
+function initNav(){
+  const links=[...document.querySelectorAll('#toc a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  window.addEventListener('scroll',()=>{const h=document.documentElement;$('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+    let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('active',i===cur));},{passive:true});
+}
+function safe(f){try{f();}catch(e){console.error(e);}}
+renderStatic();renderTex();
+[buildStory,initGeo,initCls,initProd,initET,initBS,initGS,initDT,initCR,initCX,initRD,initHB,initLU,initCode,initQuiz,initCopy,initNav].forEach(safe);
+renderTex();
+</script>
+</body>
+</html>
